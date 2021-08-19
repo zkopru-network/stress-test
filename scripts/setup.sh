@@ -7,10 +7,10 @@ git clone https://github.com/zkopru-network/zkopru.git zkopru
 cd zkopru
 git remote add sifnoc https://github.com/sifnoc/zkopru.git
 git fetch sifnoc
-git checkout feat/generator
+git checkout generator-migrate
 
 yarn
-yarn build:ts
+yarn build
 
 yarn images pull circuits
 cd packages/dataset
