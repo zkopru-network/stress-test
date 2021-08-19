@@ -22,43 +22,44 @@ RUN apt install -y python
 RUN npm install -g node-gyp-build
 RUN npm install -g lerna
 RUN ln -s "$(which nodejs)" /usr/bin/node
-WORKDIR /proj
+WORKDIR /generator
 
 # Copy SNARK keys
-COPY ./packages/circuits/keys /proj/keys
+COPY zkopru/packages/circuits/keys /proj/keys
 
 # Copy package.json
-COPY ./.package-dev.json /proj/package.json
-COPY ./lerna.json /proj/lerna.json
-COPY ./packages/account/package.json /proj/packages/account/package.json
-COPY ./packages/babyjubjub/package.json /proj/packages/babyjubjub/package.json
-COPY ./packages/contracts/package.json /proj/packages/contracts/package.json
-COPY ./packages/coordinator/package.json /proj/packages/coordinator/package.json
-COPY ./packages/cli/package.json /proj/packages/cli/package.json
-COPY ./packages/core/package.json /proj/packages/core/package.json
-COPY ./packages/database/package.json /proj/packages/database/package.json
-COPY ../package.json /proj/packages/generator/package.json
-COPY ./packages/transaction/package.json /proj/packages/transaction/package.json
-COPY ./packages/tree/package.json /proj/packages/tree/package.json
-COPY ./packages/utils/package.json /proj/packages/utils/package.json
-COPY ./packages/zk-wizard/package.json /proj/packages/zk-wizard/package.json
-COPY ./yarn.lock /proj/yarn.lock
-
-RUN yarn install
+COPY zkopru/.package-dev.json /generator/zkopru/package.json
+COPY zkopru/lerna.json /generator/zkopru/lerna.json
+COPY zkopru/packages/account/package.json /generator/zkopru/packages/account/package.json
+COPY zkopru/packages/babyjubjub/package.json /generator/zkopru/packages/babyjubjub/package.json
+COPY zkopru/packages/contracts/package.json /generator/zkopru/packages/contracts/package.json
+COPY zkopru/packages/coordinator/package.json /generator/zkopru/packages/coordinator/package.json
+COPY zkopru/packages/cli/package.json /generator/zkopru/packages/cli/package.json
+COPY zkopru/packages/core/package.json /generator/zkopru/packages/core/package.json
+COPY zkopru/packages/database/package.json /generator/zkopru/packages/database/package.json
+COPY ./package.json /generator/package.json
+COPY zkopru/packages/transaction/package.json /generator/zkopru/packages/transaction/package.json
+COPY zkopru/packages/tree/package.json /generator/zkopru/packages/tree/package.json
+COPY zkopru/packages/utils/package.json /generator/zkopru/packages/utils/package.json
+COPY zkopru/packages/zk-wizard/package.json /generator/zkopru/packages/zk-wizard/package.json
+COPY zkopru/yarn.lock /generator/zkopru/yarn.lock
+COPY ./yarn.lock /generator/yarn.lock
 
 # Copy dist
-COPY ./packages/account/dist /proj/packages/account/dist
-COPY ./packages/babyjubjub/dist /proj/packages/babyjubjub/dist
-COPY ./packages/contracts/dist /proj/packages/contracts/dist
-COPY ./packages/coordinator/dist /proj/packages/coordinator/dist
-COPY ./packages/core/dist /proj/packages/core/dist
-COPY ./packages/cli/dist /proj/packages/cli/dist
-COPY ./packages/database/dist /proj/packages/database/dist
-COPY ../dist /proj/packages/generator/dist
-COPY ./packages/transaction/dist /proj/packages/transaction/dist
-COPY ./packages/tree/dist /proj/packages/tree/dist
-COPY ./packages/utils/dist /proj/packages/utils/dist
-COPY ./packages/zk-wizard/dist /proj/packages/zk-wizard/dist
-RUN lerna clean -y --loglevel silent && lerna bootstrap
+COPY zkopru/packages/account/dist /generator/zkopru/packages/account/dist
+COPY zkopru/packages/babyjubjub/dist /generator/zkopru/packages/babyjubjub/dist
+COPY zkopru/packages/contracts/dist /generator/zkopru/packages/contracts/dist
+COPY zkopru/packages/coordinator/dist /generator/zkopru/packages/coordinator/dist
+COPY zkopru/packages/core/dist /generator/zkopru/packages/core/dist
+COPY zkopru/packages/cli/dist /generator/zkopru/packages/cli/dist
+COPY zkopru/packages/database/dist /generator/zkopru/packages/database/dist
+COPY ./dist /generator/dist
+COPY zkopru/packages/transaction/dist /generator/zkopru/packages/transaction/dist
+COPY zkopru/packages/tree/dist /generator/zkopru/packages/tree/dist
+COPY zkopru/packages/utils/dist /generator/zkopru/packages/utils/dist
+COPY zkopru/packages/zk-wizard/dist /generator/zkopru/packages/zk-wizard/dist
+#RUN lerna clean -y --loglevel silent && lerna bootstrap
+
+RUN yarn install
 
 EXPOSE 8888

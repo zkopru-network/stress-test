@@ -6,7 +6,6 @@
     "rootDir": ".",
     "outDir": "dist",
     "baseUrl": ".",
-    "noUnusedLocals": false,
     "paths": {
       "~account/*": ["zkopru/packages/account/src/*"],
       "~babyjubjub/*": ["zkopru/packages/babyjubjub/src/*"],
