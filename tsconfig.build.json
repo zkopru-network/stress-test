@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "baseUrl": "packages",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "removeComments": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "incremental": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "noImplicitAny": false,
+    "lib": ["es2020", "DOM", "DOM.Iterable", "ScriptHost"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "references": [
+    { "path": "./zkopru/account/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/contracts/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/coordinator/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/core/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/database/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/transaction/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/utils/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/zk-wizard/tsconfig.build.json", "prepend": false }
+  ]
+}
