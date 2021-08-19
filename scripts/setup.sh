@@ -2,11 +2,15 @@
 
 set -e
 
-#git clone https://github.com/zkopru-network/zkopru.git zkopru
+git clone https://github.com/zkopru-network/zkopru.git zkopru
 
 cd zkopru
-#yarn
-#yarn build:ts
+git remote add sifnoc https://github.com/sifnoc/zkopru.git
+git fetch sifnoc
+git checkout feat/generator
+
+yarn
+yarn build:ts
 
 yarn images pull circuits
 cd packages/dataset
