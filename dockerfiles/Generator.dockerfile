@@ -37,7 +37,7 @@ COPY ./packages/coordinator/package.json /proj/packages/coordinator/package.json
 COPY ./packages/cli/package.json /proj/packages/cli/package.json
 COPY ./packages/core/package.json /proj/packages/core/package.json
 COPY ./packages/database/package.json /proj/packages/database/package.json
-COPY ./packages/generator/package.json /proj/packages/generator/package.json
+COPY ../package.json /proj/packages/generator/package.json
 COPY ./packages/transaction/package.json /proj/packages/transaction/package.json
 COPY ./packages/tree/package.json /proj/packages/tree/package.json
 COPY ./packages/utils/package.json /proj/packages/utils/package.json
@@ -54,7 +54,7 @@ COPY ./packages/coordinator/dist /proj/packages/coordinator/dist
 COPY ./packages/core/dist /proj/packages/core/dist
 COPY ./packages/cli/dist /proj/packages/cli/dist
 COPY ./packages/database/dist /proj/packages/database/dist
-COPY ./packages/generator/dist /proj/packages/generator/dist
+COPY ../dist /proj/packages/generator/dist
 COPY ./packages/transaction/dist /proj/packages/transaction/dist
 COPY ./packages/tree/dist /proj/packages/tree/dist
 COPY ./packages/utils/dist /proj/packages/utils/dist

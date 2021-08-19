@@ -8,7 +8,7 @@
     "dist"
   ],
   "_moduleAliases": {
-    "~zk-wizard": "./zkopru/zk-wizard/dist"
+    "~zk-wizard": "./zkopru/packages/zk-wizard/dist"
   },
   "bin": {
     "zkopru-wallet": "dist/wallet.js",
@@ -20,6 +20,7 @@
   "preferGlobal": true,
   "scripts": {
     "prebuild": "shx mkdir -p dist",
+    "postinstall": "yarn link-modules",
     "build": "tsc --build tsconfig.build.json",
     "clean": "tsc --build tsconfig.build.json --clean && shx rm -rf coverage *.log junit.xml dist && jest --clearCache",
     "link-modules": "link-module-alias",
@@ -33,15 +34,15 @@
     "dev:wallet": "ts-node src/wallet.ts --config wallet.dev.json"
   },
   "dependencies": {
-    "@zkopru/account": "file:./zkopru/account",
-    "@zkopru/babyjubjub": "file:./zkopru/babyjubjub",
-    "@zkopru/contracts": "file:./zkopru/contracts",
-    "@zkopru/coordinator": "file:./zkopru/coordinator",
-    "@zkopru/core": "file:./zkopru/core",
-    "@zkopru/database": "file:./zkopru/database",
-    "@zkopru/transaction": "file:./zkopru/transaction",
-    "@zkopru/utils": "file:./zkopru/utils",
-    "@zkopru/zk-wizard": "file:./.zkopru/zk-wizard",
+    "@zkopru/account": "file:./zkopru/packages/account",
+    "@zkopru/babyjubjub": "file:./zkopru/packages/babyjubjub",
+    "@zkopru/contracts": "file:./zkopru/packages/contracts",
+    "@zkopru/coordinator": "file:./zkopru/packages/coordinator",
+    "@zkopru/core": "file:./zkopru/packages/core",
+    "@zkopru/database": "file:./zkopru/packages/database",
+    "@zkopru/transaction": "file:./zkopru/packages/transaction",
+    "@zkopru/utils": "file:./zkopru/packages/utils",
+    "@zkopru/zk-wizard": "file:./zkopru/packages/zk-wizard",
     "axios": "^0.21.1",
     "big-integer": "^1.6.48",
     "bip39": "^3.0.2",
@@ -67,5 +68,14 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@typechain/web3-v1": "^2.2.0",
+    "@types/jest": "^27.0.1",
+    "jest": "^24.7.1",
+    "link-module-alias": "^1.2.0",
+    "shx": "^0.3.3",
+    "tsconfig-paths": "^3.10.1",
+    "typescript": "^3.8.3"
   }
 }

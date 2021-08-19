@@ -51,7 +51,7 @@ export class OrganizerApi {
     this.contractsReady = false
 
     this.config = organizerConfig
-    this.auction = Layer1.getIBurnAuction(context.web3, config.auctionContract)
+    this.auction = Layer1.getIBurnAuction(context.web3 as any, config.auctionContract)
 
     this.updateAuctionData()
   }

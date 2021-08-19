@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
     "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
-    "baseUrl": "packages",
+    "baseUrl": ".",
     "strict": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
@@ -23,16 +23,16 @@
     "noImplicitAny": false,
     "lib": ["es2020", "DOM", "DOM.Iterable", "ScriptHost"]
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "include": ["src", "zkopru/packages/contracts/src/contracts"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"],
   "references": [
-    { "path": "./zkopru/account/tsconfig.build.json", "prepend": false },
-    { "path": "./zkopru/contracts/tsconfig.build.json", "prepend": false },
-    { "path": "./zkopru/coordinator/tsconfig.build.json", "prepend": false },
-    { "path": "./zkopru/core/tsconfig.build.json", "prepend": false },
-    { "path": "./zkopru/database/tsconfig.build.json", "prepend": false },
-    { "path": "./zkopru/transaction/tsconfig.build.json", "prepend": false },
-    { "path": "./zkopru/utils/tsconfig.build.json", "prepend": false },
-    { "path": "./zkopru/zk-wizard/tsconfig.build.json", "prepend": false }
+    { "path": "./zkopru/packages/account/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/packages/contracts/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/packages/coordinator/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/packages/core/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/packages/database/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/packages/transaction/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/packages/utils/tsconfig.build.json", "prepend": false },
+    { "path": "./zkopru/packages/zk-wizard/tsconfig.build.json", "prepend": false }
   ]
 }
