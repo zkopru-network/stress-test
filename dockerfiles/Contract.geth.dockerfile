@@ -25,5 +25,5 @@ COPY ./zkopru/packages/contracts/keys /proj/keys
 COPY ./genesis.json /proj/genesis.json
 COPY ./testnet-key /proj/testnet-key
 COPY ./testnet-pass /proj/testnet-pass
-COPY ./run_geth.sh /proj/run_geth.sh
+COPY ./scripts/run_geth.sh /proj/run_geth.sh
 CMD ["geth", "--dev", "--networkid", "20200406", "--datadir", "data", "--rpc", "--rpcaddr", "0.0.0.0", "--rpccorsdomain", "*","--http.api", "eth,net,web3,personal,miner", "--nousb"]
