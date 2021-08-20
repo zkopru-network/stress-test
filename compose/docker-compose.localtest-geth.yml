@@ -2,15 +2,17 @@ version: '3'
 
 services:
   testnet:
+    image: zkopru_testnet_geth
     build:
       context: ../
-      dockerfile: dockerfiles/Contract.geth.dockerfile
+      dockerfile: ./dockerfiles/Contract.geth.dockerfile
     ports:
       - '5000:5000'
     labels:
       kompose.service.expose: testnet
     command: sh /proj/run_geth.sh
   coordinator:
+    image: zkopru_node
     build:
       context: ../
       dockerfile: ./dockerfiles/Generator.dockerfile
@@ -23,8 +25,7 @@ services:
       kompose.service.expose: coordinator
     command: >
       bash -c "nc -l -p 5354 &&
-      sleep 10 &&
-      node /generator/dist/src/coordinator.js"
+      node /generator/dist/coordinator.js"
   redis:
     image: redis
     ports:
@@ -32,6 +33,7 @@ services:
     labels:
       kompose.service.expose: redis
   organizer:
+    image: zkopru_node
     build:
       context: ../
       dockerfile: ./dockerfiles/Generator.dockerfile
@@ -42,8 +44,9 @@ services:
       - 'coordinator'
     labels:
       kompose.service.expose: organizer
-    command: bash -c "node /generator/dist/src/organizer.js"
+    command: bash -c "node /generator/dist/organizer.js"
   wallet:
+    image: zkopru_node
     build:
       context: ../
       dockerfile: ./dockerfiles/Generator.dockerfile
@@ -53,18 +56,13 @@ services:
     labels:
       kompose.controller.type: deployment
     command: >
-      bash -c "sleep 10 && node /generator/dist/src/wallet.js"
+      bash -c "sleep 10 && node /generator/dist/wallet.js"
   turner:
+    image: zkopru_node
     build:
       context: ../
       dockerfile: ./dockerfiles/Generator.dockerfile
     depends_on:
       - 'wallet'
-    command: bash -c "sleep 60 && node /generator/dist/src/blockturner.js"
+    command: bash -c "sleep 60 && node /generator/dist/blockturner.js"
 
-networks:
-  default:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.33.0.0/24

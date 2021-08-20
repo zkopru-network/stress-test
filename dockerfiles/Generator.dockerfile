@@ -53,7 +53,7 @@ COPY zkopru/packages/coordinator/dist /generator/zkopru/packages/coordinator/dis
 COPY zkopru/packages/core/dist /generator/zkopru/packages/core/dist
 COPY zkopru/packages/cli/dist /generator/zkopru/packages/cli/dist
 COPY zkopru/packages/database/dist /generator/zkopru/packages/database/dist
-COPY ./dist /generator/dist
+COPY ./dist/src /generator/dist
 COPY zkopru/packages/transaction/dist /generator/zkopru/packages/transaction/dist
 COPY zkopru/packages/tree/dist /generator/zkopru/packages/tree/dist
 COPY zkopru/packages/utils/dist /generator/zkopru/packages/utils/dist

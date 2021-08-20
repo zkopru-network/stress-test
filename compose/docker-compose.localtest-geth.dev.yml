@@ -4,8 +4,8 @@ services:
   testnet:
     image: zkopru_testnet_geth:latest
     build:
-      context: ../packages/contracts/
-      dockerfile: ../../dockerfiles/Contract.geth.dockerfile
+      context: ../
+      dockerfile: ./dockerfiles/Contract.geth.dockerfile
     ports:
       - '5000:5000'
     labels:
@@ -24,10 +24,10 @@ services:
     labels:
       kompose.service.expose: coordinator
     volumes:
-      - '../packages:/proj/packages'
+      - '../dist/src:/generator/dist'
     command: >
       bash -c "nc -l -p 5354 &&
-      node /proj/packages/generator/dist/coordinator.js"
+      node /generator/dist/coordinator.js"
   redis:
     image: redis
     ports:
@@ -45,10 +45,10 @@ services:
       - 'redis'
       - 'coordinator'
     volumes:
-      - '../packages:/proj/packages'
+      - '../dist/src:/generator/dist'
     labels:
       kompose.service.expose: organizer
-    command: bash -c "node /proj/packages/generator/dist/organizer.js"
+    command: bash -c "node /generator/dist/organizer.js"
   wallet:
     image: zkopru_node:latest
     build:
@@ -58,25 +58,19 @@ services:
       - 'redis'
       - 'organizer'
     volumes:
-      - '../packages:/proj/packages'
+      - '../dist/src:/generator/dist'
     labels:
       kompose.controller.type: deployment
     command: >
-      bash -c "sleep 10 && node /proj/packages/generator/dist/wallet.js"
+      bash -c "sleep 10 && node /generator/dist/wallet.js"
   turner:
     image: zkopru_node:latest
     build:
       context: ../
       dockerfile: ./dockerfiles/Generator.dockerfile
     volumes:
-      - '../packages:/proj/packages'
+      - '../dist/src:/generator/dist'
     depends_on:
       - 'wallet'
-    command: bash -c "sleep 60 && node /proj/packages/generator/dist/blockturner.js"
+    command: bash -c "sleep 60 && node /generator/dist/blockturner.js"
 
-networks:
-  default:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.33.0.0/24
