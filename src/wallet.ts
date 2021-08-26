@@ -1,5 +1,4 @@
 /* eslint-disable no-case-declarations */
-import { toWei } from 'web3-utils'
 import fetch from 'node-fetch'
 
 import { FullNode } from '@zkopru/core'
@@ -66,7 +65,6 @@ async function runGenerator() {
     account: walletAccount,
     accounts: [walletAccount],
     node: walletNode,
-    noteAmount: { eth: toWei('0.1'), fee: toWei('0.01') },
     erc20: [],
     erc721: [],
     snarkKeyPath: '/proj/keys',

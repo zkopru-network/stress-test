@@ -8,7 +8,7 @@ services:
       dockerfile: ./dockerfiles/Contract.dockerfile
     ports:
       - '5000:5000'
-    command: ganache-cli --db=/data -i 20200406 -p 5000 --gasLimit 12000000 --deterministic --host 0.0.0.0 --secure --blockTime 10
+    command: ganache-cli --db=/data -i 20200406 -p 5000 --gasLimit 12000000 --deterministic --host 0.0.0.0 --secure --blockTime 13
   coordinator:
     image: zkopru_node
     build:
@@ -16,11 +16,9 @@ services:
       dockerfile: ./dockerfiles/Generator.dockerfile
     ports:
       - '8888:8888'
-    links:
-      - 'testnet'
     depends_on:
       - 'testnet'
-    command: bash -c "sleep 5 && node /proj/packages/generator/dist/coordinator.js"
+    command: bash -c "sleep 5 && node /generator/dist/coordinator.js"
   redis:
     image: redis
     ports:
@@ -30,23 +28,18 @@ services:
     build:
       context: ../
       dockerfile: ./dockerfiles/Generator.dockerfile
-    links:
-      - 'testnet'
-      - 'coordinator'
-      - 'wallet'
     ports:
       - '8080:8080'
     depends_on:
-      - 'wallet'
-    command: bash -c "sleep 10 && node /proj/packages/generator/dist/organizer.js"
+      - 'redis'
+      - 'coordinator'
+    command: bash -c "sleep 10 && node /generator/dist/organizer.js"
   wallet:
     image: zkopru_node
     build:
       context: ../
       dockerfile: ./dockerfiles/Generator.dockerfile
-    links:
-      - 'testnet'
-      - 'coordinator'
     depends_on:
-      - 'coordinator'
-    command: bash -c "sleep 15 && node /proj/packages/generator/dist/wallet.js"
+      - 'redis'
+      - 'organizer'
+    command: bash -c "sleep 15 && node /generator/dist/wallet.js"
