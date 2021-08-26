@@ -112,7 +112,7 @@ export class OrganizerQueue {
       main: new Worker<ZkTxData, any, string>(
         'mainQueue',
         async (job: ZkTxJob) => {
-          logger.info(
+          logger.debug(
             `mainQueue worker job received jobName: ${job.name} jogData ${job.data}`,
           )
           this.queues.sub[this.currentQueue].add(job.name, job.data)

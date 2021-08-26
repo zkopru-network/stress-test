@@ -172,11 +172,10 @@ export class TransferGenerator extends ZkWalletAccount {
 
       /* eslint-disable no-continue */
       if (currentTxs >= config.mainQueueLimit) {
-        logger.info(`queue is full wait 1 sec`)
         await sleep(1000)
         continue
       } else {
-        logger.info(`current job count ${currentTxs}`)
+        logger.debug(`current job count ${currentTxs}`)
       }
 
       const unspentUTXO = await this.getUtxos(this.account, UtxoStatus.UNSPENT)
@@ -230,7 +229,7 @@ export class TransferGenerator extends ZkWalletAccount {
             }
           }),
         }
-        logger.info(`Created ZkTx : ${logAll(parsedZkTx)}`)
+        logger.trace(`Created ZkTx : ${logAll(parsedZkTx)}`)
         try {
           const zkTx = await this.shieldTx({ tx })
           this.usedUtxoSalt.add(sendableUtxo.salt.toNumber())
