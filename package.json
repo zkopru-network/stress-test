@@ -19,6 +19,7 @@
   ],
   "preferGlobal": true,
   "scripts": {
+    "setup": "bash scripts/setup.sh",
     "prebuild": "shx mkdir -p dist",
     "postinstall": "yarn link-modules",
     "build": "tsc --build tsconfig.build.json",
