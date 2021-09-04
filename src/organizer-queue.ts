@@ -1,6 +1,6 @@
 import { Job, Queue, QueueScheduler, Worker } from 'bullmq'
-import { RawTx, ZkTx } from '@zkopru/transaction'
-import { logger } from '@zkopru/utils'
+import { RawTx, ZkTx } from '~transaction'
+import { logger } from '~utils'
 
 /*
 Organizer Queue has two types of queue, 'main' and 'sub'.

@@ -3,9 +3,9 @@ import path from 'path'
 import { toWei } from 'web3-utils'
 import fetch from 'node-fetch'
 
-import { FullNode } from '@zkopru/core'
-import { logger, sleep } from '@zkopru/utils'
-import { ZkWallet } from '@zkopru/zk-wizard'
+import { FullNode } from '~core'
+import { logger, sleep } from '~utils'
+import { ZkWallet } from '~zk-wizard'
 import { getBase, startLogger } from './generator-utils'
 import { config } from './config'
 

@@ -2,7 +2,7 @@ import assert from 'assert'
 import { fromWei } from 'web3-utils'
 import { Address } from 'soltypes'
 
-import { F, Fp } from '@zkopru/babyjubjub'
+import { F, Fp } from '~babyjubjub'
 import {
   TxBuilder,
   Utxo,
@@ -12,8 +12,8 @@ import {
   Withdrawal,
   Migration,
   OutflowType,
-} from '@zkopru/transaction'
-import { logger, txSizeCalculator } from '@zkopru/utils'
+} from '~transaction'
+import { logger, txSizeCalculator } from '~utils'
 
 export class TestTxBuilder extends TxBuilder {
   // This class can specifiy salt of zkTx for testing

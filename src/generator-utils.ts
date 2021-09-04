@@ -6,7 +6,7 @@ import prettier from 'pino-pretty'
 import { Transform } from 'stream'
 import { networkInterfaces } from 'os'
 
-import { F, Fp, Point } from '@zkopru/babyjubjub'
+import { F, Fp, Point } from '~babyjubjub'
 import {
   Note,
   Utxo,
@@ -14,10 +14,10 @@ import {
   ZkTx,
   UtxoStatus,
   ZkAddress,
-} from '@zkopru/transaction'
-import { HDWallet, ZkAccount } from '@zkopru/account'
-import { logStream } from '@zkopru/utils'
-import { SQLiteConnector, schema } from '@zkopru/database/dist/node'
+} from '~transaction'
+import { HDWallet, ZkAccount } from '~account'
+import { logStream } from '~utils'
+import { SQLiteConnector, schema } from '~database/node'
 import { ZkWallet } from '~zk-wizard/zk-wallet'
 
 // helper functions

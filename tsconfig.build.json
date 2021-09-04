@@ -21,9 +21,25 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "noImplicitAny": false,
-    "lib": ["es2020", "DOM", "DOM.Iterable", "ScriptHost"]
+    "lib": ["es2020", "DOM", "DOM.Iterable", "ScriptHost"],
+    "paths": {
+      "~account/*": ["zkopru/packages/account/src/*"],
+      "~babyjubjub/*": ["zkopru/packages/babyjubjub/src/*"],
+      "~database/*": ["zkopru/packages/database/src/*"],
+      "~circuits/*": ["zkopru/packages/circuits/src/*"],
+      "~wallet/*": ["zkopru/packages/wallet/src/*"],
+      "~contracts/*": ["zkopru/packages/contracts/src/*"],
+      "~coordinator/*": ["zkopru/packages/coordinator/src/*"],
+      "~core/*": ["zkopru/packages/core/src/*"],
+      "~dataset/*": ["zkopru/packages/dataset/src/*"],
+      "~transaction/*": ["zkopru/packages/transaction/src/*"],
+      "~tree/*": ["zkopru/packages/tree/src/*"],
+      "~utils/*": ["zkopru/packages/utils/src/*"],
+      "~zk-wizard/*": ["zkopru/packages/zk-wizard/src/*"],
+      "~*": ["zkopru/packages/*/src"]
+    }
   },
-  "include": ["src", "zkopru/packages/contracts/src/contracts"],
+  "include": ["src"],
   "exclude": ["**/*.test.ts", "**/*.spec.ts"],
   "references": [
     { "path": "./zkopru/packages/account/tsconfig.build.json", "prepend": false },

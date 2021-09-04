@@ -7,9 +7,6 @@
   "files": [
     "dist"
   ],
-  "_moduleAliases": {
-    "~zk-wizard": "./zkopru/packages/zk-wizard/dist"
-  },
   "bin": {
     "zkopru-wallet": "dist/wallet.js",
     "zkopru-coordinator": "dist/coordinator.js"
@@ -34,15 +31,7 @@
     "dev:wallet": "ts-node src/wallet.ts --config wallet.dev.json"
   },
   "dependencies": {
-    "@zkopru/account": "file:./zkopru/packages/account",
-    "@zkopru/babyjubjub": "file:./zkopru/packages/babyjubjub",
-    "@zkopru/contracts": "file:./zkopru/packages/contracts",
-    "@zkopru/coordinator": "file:./zkopru/packages/coordinator",
-    "@zkopru/core": "file:./zkopru/packages/core",
-    "@zkopru/database": "file:./zkopru/packages/database",
-    "@zkopru/transaction": "file:./zkopru/packages/transaction",
-    "@zkopru/utils": "file:./zkopru/packages/utils",
-    "@zkopru/zk-wizard": "file:./zkopru/packages/zk-wizard",
+    "async-lock": "^1.3.0",
     "axios": "^0.21.1",
     "big-integer": "^1.6.48",
     "bip39": "^3.0.2",

@@ -1,8 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import AsyncLock from 'async-lock'
 import express from 'express'
-import { logger, sleep } from '@zkopru/utils'
-import { Layer1, IBurnAuction } from '@zkopru/contracts'
+import { logger, sleep } from '~utils'
+import { Layer1, IBurnAuction } from '~contracts'
 import { OrganizerQueue } from './organizer-queue'
 import { logAll } from './generator-utils'
 import {

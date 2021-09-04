@@ -1,8 +1,8 @@
 /* eslint-disable no-case-declarations */
 import fetch from 'node-fetch'
 
-import { FullNode } from '@zkopru/core'
-import { logger, sleep } from '@zkopru/utils'
+import { FullNode } from '~core'
+import { logger, sleep } from '~utils'
 import { TransferGenerator } from './generator'
 import { getBase, startLogger } from './generator-utils'
 import { config } from './config'
