@@ -4,19 +4,30 @@ import { OrganizerQueueConfig } from './organizer-queue'
 // Generator types
 
 // Organizer API types
-interface WalletData {
-  registeredId: number
-  from?: string
-}
-
 interface GasData {
   from: string
   inputSize: number
   gasUsed?: number
 }
 
-interface CoordinatorUrls {
-  [account: string]: string
+export interface WalletConfig {
+  weiPerByte: number
+}
+
+export interface WalletData extends WalletConfig {
+  registeredId: number
+  from?: string
+}
+
+export interface CoordinatorConfig {
+  url: string
+  maxBytes?: number
+  priceMultiplier?: number
+  maxBid?: number
+}
+
+export interface CoordinatorData {
+  [account: string]: CoordinatorConfig
 }
 
 export interface OrganizerConfig extends OrganizerQueueConfig {
@@ -26,14 +37,15 @@ export interface OrganizerConfig extends OrganizerQueueConfig {
 
 export interface OrganizerContext {
   web3: Web3
-  coordinators: CoordinatorUrls
+  coordinators: CoordinatorData
 }
 
 export interface RegisterData {
-  ID: number
-  from: string
   role: 'wallet' | 'coordinator'
+  id: number
+  from: string
   url: string
+  configData: WalletConfig | CoordinatorConfig
 }
 
 export interface TxData {

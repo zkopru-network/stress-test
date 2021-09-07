@@ -12,6 +12,8 @@ import {
   RegisterData,
   OrganizerData,
   ProposeData,
+  WalletConfig,
+  CoordinatorConfig
 } from './types'
 import { config } from './config'
 
@@ -57,14 +59,14 @@ export class OrganizerApi {
   }
 
   // TODO: check this method purpose
-  registerCoordinator(account: string, url: string) {
+  registerCoordinator(account: string, updateData: CoordinatorConfig) {
     if (!this.context.coordinators[account]) {
-      this.context.coordinators[account] = url
+      this.context.coordinators[account]  = updateData
     }
     return this.context.coordinators.length
   }
 
-  registerWallet(account: string): number {
+  registerWallet(account: string, weiPerByte: number): number {
     const lastRegistered = this.organizerData.walletData.length
     logger.info(
       `Current length ${lastRegistered}, ${logAll(
@@ -76,6 +78,7 @@ export class OrganizerApi {
     this.organizerData.walletData.push({
       from: account,
       registeredId: updatedNumber,
+      weiPerByte
     })
 
     const allWalletQueues = this.organizerQueue.addWalletQueue(
@@ -217,30 +220,31 @@ export class OrganizerApi {
       }
 
       // The test wallet's address will be updated after first deposit
-      if (data.ID && data.from) {
-        logger.info(`updating address ${data.ID} as ${data.from}`)
-        for (let i = 0; i < this.organizerData.walletData.length; i += 1) {
-          if (this.organizerData.walletData[i].registeredId === data.ID) {
-            this.organizerData.walletData[i].from = data.from
-          }
-        }
-        // Does not worry about racing condition
-        // wallet watching blocks then follow the sequence
-        this.lastDepositerID = data.ID
-        res.send(true)
-        return
-      }
-
       if (data.role === 'wallet') {
+        if (data.id && data.from) {
+          logger.info(`updating address ${data.id} as ${data.from}`)
+          for (let i = 0; i < this.organizerData.walletData.length; i += 1) {
+            if (this.organizerData.walletData[i].registeredId === data.id) {
+              const configData = data.configData as WalletConfig
+              this.organizerData.walletData[i].from = data.from
+              this.organizerData.walletData[i].weiPerByte = configData.weiPerByte
+          }}
+          // Does not worry about racing condition
+          // wallet watching blocks then follow the sequence
+          this.lastDepositerID = data.id
+          res.send(true)
+          return
+        }
         const walletId = await this.registerLock.acquire('wallet', () => {
-          return this.registerWallet(data.from ?? '')
+          return this.registerWallet(data.from ?? '', 0) // only get id number before deposit to registration
         })
         res.send({ ID: walletId })
       } else if (data.role === 'coordinator') {
         const coordinatorCount = await this.registerLock.acquire(
           'coordinator',
           () => {
-            return this.registerCoordinator(data.from, data.url)
+            const { url, maxBytes, priceMultiplier, maxBid } = data.configData as CoordinatorConfig
+            return this.registerCoordinator(data.from, {url, maxBytes, priceMultiplier, maxBid})
           },
         )
         res.send({ coordinatorCount })
