@@ -10,24 +10,25 @@ interface GasData {
   gasUsed?: number
 }
 
-export interface WalletConfig {
+export interface WalletParams {
+  id?: number
   weiPerByte: number
 }
 
-export interface WalletData extends WalletConfig {
-  registeredId: number
-  from?: string
+export interface WalletData  {
+  [account: string]: WalletParams
 }
 
-export interface CoordinatorConfig {
+export interface CoordinatorParams {
+  id?: number
   url: string
-  maxBytes?: number
-  priceMultiplier?: number
-  maxBid?: number
+  maxBytes: number
+  priceMultiplier: number
+  maxBid: number
 }
 
 export interface CoordinatorData {
-  [account: string]: CoordinatorConfig
+  [account: string]: CoordinatorParams
 }
 
 export interface OrganizerConfig extends OrganizerQueueConfig {
@@ -42,10 +43,10 @@ export interface OrganizerContext {
 
 export interface RegisterData {
   role: 'wallet' | 'coordinator'
-  id: number
+  id?: number
   from: string
   url: string
-  configData: WalletConfig | CoordinatorConfig
+  params?: WalletParams | CoordinatorParams
 }
 
 export interface TxData {
@@ -87,8 +88,9 @@ export interface OrganizerData {
   layer1: {
     txData: TxData[]
     auctionData: AuctionData
+    proposeData: ProposeData[]
     gasTable: { [sig: string]: GasData[] }
   }
-  coordinatorData: ProposeData[]
-  walletData: WalletData[]
+  coordinatorData: CoordinatorData
+  walletData: WalletData
 }

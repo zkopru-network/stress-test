@@ -9,7 +9,6 @@ startLogger('ORGANIZER_LOG')
 
 logger.info('Organizer Initializing')
 
-const coordinatorUrl = process.env.COORDINATOR_URL ?? `http://coordinator:8888`
 const isDevelopment = process.env.DEVELOPMENT
 
 const webSocketProvider = new Web3.providers.WebsocketProvider(
@@ -24,9 +23,7 @@ const web3 = new Web3(webSocketProvider)
 const organierContext = {
   web3,
   dev: isDevelopment,
-  coordinators: {
-    [config.zkopruContract]: coordinatorUrl,
-  },
+  coordinators: {}
 } // Test Coordinator
 
 const organizerConfig: OrganizerConfig = {

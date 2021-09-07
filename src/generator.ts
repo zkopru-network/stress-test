@@ -1,8 +1,8 @@
 // import fs from 'fs'
 import BN from 'bn.js'
+import fetch from 'node-fetch'
 import { toWei } from 'web3-utils'
 import { Queue, Worker, ConnectionOptions, QueueScheduler } from 'bullmq'
-import fetch from 'node-fetch'
 
 import { Fp } from '@zkopru/babyjubjub'
 import { UtxoStatus, Utxo } from '@zkopru/transaction'

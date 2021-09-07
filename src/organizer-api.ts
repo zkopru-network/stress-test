@@ -12,8 +12,8 @@ import {
   RegisterData,
   OrganizerData,
   ProposeData,
-  WalletConfig,
-  CoordinatorConfig
+  WalletParams,
+  CoordinatorParams
 } from './types'
 import { config } from './config'
 
@@ -42,9 +42,10 @@ export class OrganizerApi {
         txData: [],
         auctionData: {},
         gasTable: {},
+        proposeData: []
       },
-      coordinatorData: [],
-      walletData: [],
+      coordinatorData: {},
+      walletData: {},
     } // Initialize
 
     this.organizerQueue = new OrganizerQueue(organizerConfig)
@@ -59,34 +60,61 @@ export class OrganizerApi {
   }
 
   // TODO: check this method purpose
-  registerCoordinator(account: string, updateData: CoordinatorConfig) {
-    if (!this.context.coordinators[account]) {
-      this.context.coordinators[account]  = updateData
+  registerCoordinator(account: string, updateData: CoordinatorParams) {
+    try {
+      let coordinatorId: number
+      if (account in this.organizerData.coordinatorData) {
+        const coordinatorCount = Object.keys(this.organizerData.coordinatorData).length
+        coordinatorId = (coordinatorCount ?? 0) + 1     
+      } else {
+        coordinatorId = this.organizerData.coordinatorData[account].id!
+      }
+      const { url, maxBytes, priceMultiplier, maxBid } = updateData
+      this.organizerData.coordinatorData[account]  = {
+        id: coordinatorId,
+        url, 
+        maxBytes, 
+        priceMultiplier, 
+        maxBid 
+      }
+      return coordinatorId
+    } catch (error) {
+      logger.warn(`Error on registering coordinator - ${error}`)
+      return
     }
-    return this.context.coordinators.length
   }
 
-  registerWallet(account: string, weiPerByte: number): number {
-    const lastRegistered = this.organizerData.walletData.length
-    logger.info(
-      `Current length ${lastRegistered}, ${logAll(
-        this.organizerData.walletData,
-      )}`,
-    )
-    const updatedNumber = (lastRegistered ?? 0) + 1
+  registerWallet(account: string, weiPerByte: number) {
+    try {
+      let walletId: number
+      if (account in this.organizerData.coordinatorData) {
+        const walletCount = Object.keys(this.organizerData.coordinatorData).length
+        walletId = (walletCount ?? 0) + 1     
+      } else {
+        walletId = this.organizerData.coordinatorData[account].id!
+      }
 
-    this.organizerData.walletData.push({
-      from: account,
-      registeredId: updatedNumber,
-      weiPerByte
-    })
-
-    const allWalletQueues = this.organizerQueue.addWalletQueue(
-      `wallet${updatedNumber}`,
-    )
-    logger.info(`registered wallet queues are ${logAll(allWalletQueues)}`)
-
-    return this.organizerData.walletData.length
+      logger.debug(
+        `Current length ${walletId}, ${logAll(
+          this.organizerData.walletData,
+        )}`,
+      )
+  
+      this.organizerData.walletData[account] = {
+        id: walletId,
+        weiPerByte
+      }
+  
+      // Queue for contol tx flow rate
+      const allWalletQueues = this.organizerQueue.addWalletQueue(
+        `wallet${walletId}`,
+      )
+      logger.trace(`registered wallet queues are ${logAll(allWalletQueues)}`)
+      return walletId
+    } catch (error) {
+      logger.error(`Error on registering wallet - ${error}`)
+      return
+    }
   }
 
   updateAuctionData() {
@@ -194,7 +222,7 @@ export class OrganizerApi {
     })
 
     app.get('/registered', async (_, res) => {
-      res.send(this.organizerData.walletData)
+      res.send({coordinators: this.organizerData.coordinatorData, wallets: this.organizerData.walletData})
     })
 
     app.get(`/auctionStatus`, async (_, res) => {
@@ -206,7 +234,7 @@ export class OrganizerApi {
       if (req.query.limit) {
         limit = parseInt(req.query.limit as string, 10)
       }
-      res.send(this.organizerData.coordinatorData.slice(-1 * limit))
+      res.send(this.organizerData.layer1.proposeData.slice(-1 * limit))
     })
 
     app.post('/register', async (req, res) => {
@@ -221,35 +249,34 @@ export class OrganizerApi {
 
       // The test wallet's address will be updated after first deposit
       if (data.role === 'wallet') {
-        if (data.id && data.from) {
-          logger.info(`updating address ${data.id} as ${data.from}`)
-          for (let i = 0; i < this.organizerData.walletData.length; i += 1) {
-            if (this.organizerData.walletData[i].registeredId === data.id) {
-              const configData = data.configData as WalletConfig
-              this.organizerData.walletData[i].from = data.from
-              this.organizerData.walletData[i].weiPerByte = configData.weiPerByte
-          }}
+        if (data.params?.id) {
+          const configData = data.params as WalletParams
+          logger.info(`updating address ${data.id} as ${configData.weiPerByte}`)
+
+          this.organizerData.walletData[data.from] = {
+            id: configData.id,
+            weiPerByte: configData.weiPerByte
+          }
           // Does not worry about racing condition
           // wallet watching blocks then follow the sequence
-          this.lastDepositerID = data.id
-          res.send(true)
+          this.lastDepositerID = configData.id!
+          res.send({ id: data.params.id, message: "registered"})
           return
         }
-        const walletId = await this.registerLock.acquire('wallet', () => {
-          return this.registerWallet(data.from ?? '', 0) // only get id number before deposit to registration
+        const registeredId = await this.registerLock.acquire('wallet', () => {
+          return this.registerWallet(data.from, 0) // only get id number before deposit to registration
         })
-        res.send({ ID: walletId })
+        res.send({ id: registeredId, message: "pending" })
       } else if (data.role === 'coordinator') {
-        const coordinatorCount = await this.registerLock.acquire(
+        const coordinatorParams = data.params as CoordinatorParams
+        const registeredId = await this.registerLock.acquire(
           'coordinator',
           () => {
-            const { url, maxBytes, priceMultiplier, maxBid } = data.configData as CoordinatorConfig
-            return this.registerCoordinator(data.from, {url, maxBytes, priceMultiplier, maxBid})
-          },
-        )
-        res.send({ coordinatorCount })
+            return this.registerCoordinator(data.from, coordinatorParams)
+          })
+        res.send({ id: registeredId, message: "registered" })
       } else {
-        res.status(400).send(`Need to role for register`)
+        res.status(400).send(`Only 'wallet' or 'coordinator' allows for role`)
       }
     })
 
@@ -280,7 +307,7 @@ export class OrganizerApi {
           layer1TxHash,
           layer1BlockNumber,
         } = data
-        this.organizerData.coordinatorData.push({
+        this.organizerData.layer1.proposeData.push({
           timestamp,
           proposeNum,
           blockHash,
@@ -307,8 +334,8 @@ export class OrganizerApi {
       if (req.query.limit) {
         limit = parseInt(req.query.limit as string, 10)
       }
-      if (this.organizerData.coordinatorData !== []) {
-        const response = this.organizerData.coordinatorData
+      if (this.organizerData.layer1.proposeData !== []) {
+        const response = this.organizerData.layer1.proposeData
           .slice(-1 * (limit + 1))
           .map(data => {
             if (data.proposeNum === 0) {

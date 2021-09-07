@@ -6,7 +6,7 @@ import { Block, FullNode } from '@zkopru/core'
 import { Coordinator } from '@zkopru/coordinator'
 import { logger } from '@zkopru/utils'
 import { config } from './config'
-import { ProposeData } from './types'
+import { ProposeData, CoordinatorParams  } from './types'
 import { getBase, startLogger } from './generator-utils'
 
 startLogger('COORDINATOR_LOG')
@@ -53,7 +53,7 @@ async function testCoodinator() {
     vhosts: '*',
     priceMultiplier: 48,
     publicUrls: `${coordinatorIp}:${coordinatorPort}`, // This is default params, Will be using registered coordinator address on Contract.
-    port: coordinatorPort,
+    port: coordinatorPort
   }
 
   const coordinator = new Coordinator(
@@ -61,6 +61,23 @@ async function testCoodinator() {
     coordinatorAccount.ethAccount,
     coordinatorConfig,
   )
+
+  const registerResponse = await fetch(`${organizerUrl}/register`, {
+    method: 'post',
+    body: JSON.stringify({
+      role: 'coordinator',
+      configData: {
+        url: coordinatorConfig.publicUrls,
+        maxBytes: coordinatorConfig.maxBytes,
+        priceMultiplier: coordinatorConfig.priceMultiplier,
+        maxBid: coordinatorConfig.maxBid
+      } as CoordinatorParams
+    }),
+  })
+  if (registerResponse.status !== 200) {
+    logger.warn(`Registration failed on the organizer : ${await registerResponse.text()}`)
+  }
+  logger.info(`coordinator registered : ${registerResponse.json()}`)
 
   let prevBlockHash: string = config.genesisHash
   let currentBlockHash = ''

@@ -22,7 +22,7 @@ async function runGenerator() {
   })
   const registered = await registerResponse.json()
 
-  logger.info(`Wallet selected account index ${registered.ID + 3}`)
+  logger.info(`Wallet selected account index ${registered.id + 3}`)
 
   // Wait deposit sequence
   let ready = false
@@ -32,7 +32,7 @@ async function runGenerator() {
       const readyResponse = await fetch(`${organizerUrl}/canDeposit`, {
         method: 'post',
         body: JSON.stringify({
-          ID: registered.ID,
+          id: registered.id,
         }),
       })
       ready = await readyResponse.json()
