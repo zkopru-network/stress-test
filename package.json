@@ -19,6 +19,7 @@
   ],
   "preferGlobal": true,
   "scripts": {
+    "preinstall": "shx cp -r zkopru/packages/babyjubjub/src/types zkopru/packages/babyjubjub/dist && shx cp -r zkopru/packages/contracts/src/contracts zkopru/packages/contracts/dist",
     "prebuild": "shx mkdir -p dist",
     "postinstall": "yarn link-modules",
     "build": "tsc --build tsconfig.build.json",
