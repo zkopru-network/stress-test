@@ -13,7 +13,7 @@
   ],
   "preferGlobal": true,
   "scripts": {
-    "preinstall": "shx cp -r zkopru/packages/babyjubjub/src/types zkopru/packages/babyjubjub/dist && shx cp -r zkopru/packages/contracts/src/contracts zkopru/packages/contracts/dist",
+    "preinstall": "python scripts/copy_files.py",
     "postinstall": "yarn link-modules",
     "prebuild": "shx mkdir -p dist",
     "build": "tsc --build tsconfig.build.json",
@@ -23,7 +23,7 @@
     "test:unit": "jest test/unit",
     "test:watch": "jest --watch",
     "test:ci": "jest --coverage --ci --reporters='jest-junit'",
-    "coverage": "jest --coverage",
+    "coverage": "jest --coverage"
   },
   "dependencies": {
     "@zkopru/account": "file:./zkopru/packages/account",
