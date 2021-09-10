@@ -1,0 +1,47 @@
+console.log("Copy declaration files to destination folder");
+const fs = require("fs");
+const path = require("path");
+
+// 1. Get All un-copied declaration files
+let checkDirectories = new Set()
+
+const getAllDeclarationFiles = function(dirPath, allFiles) {
+  if (dirPath.endsWith('/dist') || dirPath.endsWith('/node_modules')) return allFiles
+
+  files = fs.readdirSync(dirPath)
+
+  allFiles = allFiles || {}
+
+  files.forEach(function(file) {
+    if (fs.statSync(dirPath + "/" + file).isDirectory()) {
+      allFiles = getAllDeclarationFiles(dirPath + "/" + file, allFiles)
+    } else if (file.endsWith(".d.ts") ) {
+      if (allFiles[dirPath] == undefined) allFiles[dirPath] = []
+      allFiles[dirPath].push(file)
+      checkDirectories.add(dirPath.replace('/src', '/dist'))
+    }
+  })
+
+  return allFiles
+}
+
+const targetPackges = ["babyjubjub", "contracts"]
+
+let unCopiedFiles = {}
+
+targetPackges.forEach(package => {
+  const targetFiles = getAllDeclarationFiles(`./zkopru/packages/${package}`)
+  const filePath = Object.keys(targetFiles)
+  unCopiedFiles[filePath] = targetFiles[filePath]
+})
+
+//2. Check folder exist or create it
+for (targetDirectory of checkDirectories) {
+  if (!fs.existsSync(targetDirectory)) {
+    fs.mkdirSync(targetDirectory)
+    const sourceDirectory = targetDirectory.replace('/dist', '/src')
+    unCopiedFiles[sourceDirectory].forEach(file => {
+      fs.copyFileSync(path.join(sourceDirectory, file), path.join(targetDirectory, file))
+    })
+  }
+}
