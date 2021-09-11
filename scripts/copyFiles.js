@@ -1,4 +1,4 @@
-console.log("Copy declaration files to destination folder");
+console.log("Copy declaration files to dist in zkopru");
 const fs = require("fs");
 const path = require("path");
 
@@ -46,3 +46,5 @@ for (targetDirectory of checkDirectories) {
     fs.copyFileSync(path.join(sourceDirectory, file), path.join(targetDirectory, file))
   })
 }
+const copiedFiles = Object.keys(unCopiedFiles).reduce((total, path) => total + unCopiedFiles[path].length, 0)
+console.log(`${copiedFiles} files are copied`)
