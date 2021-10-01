@@ -6,7 +6,7 @@ import { Block, FullNode } from '@zkopru/core'
 import { Coordinator } from '@zkopru/coordinator'
 import { logger } from '@zkopru/utils'
 import { config } from './config'
-import { ProposeData, CoordinatorParams  } from './types'
+import { ProposeData, CoordinatorData } from './types'
 import { getBase, startLogger } from './generator-utils'
 
 startLogger('COORDINATOR_LOG')
@@ -66,12 +66,13 @@ async function testCoodinator() {
     method: 'post',
     body: JSON.stringify({
       role: 'coordinator',
-      configData: {
+      params: {
         url: coordinatorConfig.publicUrls,
+        from: coordinatorAccount.ethAddress,
         maxBytes: coordinatorConfig.maxBytes,
         priceMultiplier: coordinatorConfig.priceMultiplier,
         maxBid: coordinatorConfig.maxBid
-      } as CoordinatorParams
+      } as CoordinatorData
     }),
   })
   if (registerResponse.status !== 200) {

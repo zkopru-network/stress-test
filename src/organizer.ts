@@ -23,7 +23,7 @@ const web3 = new Web3(webSocketProvider)
 const organierContext = {
   web3,
   dev: isDevelopment,
-  coordinators: {}
+  coordinators: []
 } // Test Coordinator
 
 const organizerConfig: OrganizerConfig = {

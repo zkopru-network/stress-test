@@ -6,6 +6,7 @@ import { logger, sleep } from '@zkopru/utils'
 import { TransferGenerator } from './generator'
 import { getBase, startLogger } from './generator-utils'
 import { config } from './config'
+import { WalletData } from './types'
 
 startLogger(`./WALLET_LOG`)
 
@@ -18,6 +19,10 @@ async function runGenerator() {
     method: 'post',
     body: JSON.stringify({
       role: 'wallet',
+      params: { 
+        from: '0x0',
+        weiPerByte: 0,
+      } as WalletData
     }),
   })
   const registered = await registerResponse.json()
@@ -47,7 +52,7 @@ async function runGenerator() {
     config.mnemonic,
     'helloworld',
   )
-  const walletAccount = await hdWallet.createAccount(+registered.ID + 3)
+  const walletAccount = await hdWallet.createAccount(+registered.id + 3)
 
   const walletNode: FullNode = await FullNode.new({
     provider: webSocketProvider,
@@ -68,7 +73,7 @@ async function runGenerator() {
     erc20: [],
     erc721: [],
     snarkKeyPath: '/proj/keys',
-    ID: registered.ID,
+    id: registered.id,
     redis: {
       host: redisIp,
       port: 6379,

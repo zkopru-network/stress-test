@@ -12,8 +12,8 @@ import {
   RegisterData,
   OrganizerData,
   ProposeData,
-  WalletParams,
-  CoordinatorParams
+  WalletData,
+  CoordinatorData
 } from './types'
 import { config } from './config'
 
@@ -44,8 +44,8 @@ export class OrganizerApi {
         gasTable: {},
         proposeData: []
       },
-      coordinatorData: {},
-      walletData: {},
+      coordinatorData: [],
+      walletData: [],
     } // Initialize
 
     this.organizerQueue = new OrganizerQueue(organizerConfig)
@@ -59,61 +59,51 @@ export class OrganizerApi {
     this.updateAuctionData()
   }
 
-  // TODO: check this method purpose
-  registerCoordinator(account: string, updateData: CoordinatorParams) {
+  registerCoordinator(updatedData: CoordinatorData) {
     try {
       let coordinatorId: number
-      if (account in this.organizerData.coordinatorData) {
-        const coordinatorCount = Object.keys(this.organizerData.coordinatorData).length
-        coordinatorId = (coordinatorCount ?? 0) + 1     
+      const coordinatorData = this.organizerData.coordinatorData
+      if (updatedData.id) {
+        coordinatorId = updatedData.id
+        logger.debug(`registerCoordinator - update coordinator-${coordinatorId} data`)
+        coordinatorData.find((data, index) => {
+          if (data.id == coordinatorId) {
+            coordinatorData[index] = {...updatedData}
+          }
+        })
       } else {
-        coordinatorId = this.organizerData.coordinatorData[account].id!
-      }
-      const { url, maxBytes, priceMultiplier, maxBid } = updateData
-      this.organizerData.coordinatorData[account]  = {
-        id: coordinatorId,
-        url, 
-        maxBytes, 
-        priceMultiplier, 
-        maxBid 
+        logger.debug(`registerCoordinator - register new coordinator`)
+        coordinatorId = coordinatorData.length + 1
+        coordinatorData.push({id: coordinatorId, ...updatedData})
       }
       return coordinatorId
     } catch (error) {
       logger.warn(`Error on registering coordinator - ${error}`)
-      return
+      return 0
     }
   }
 
-  registerWallet(account: string, weiPerByte: number) {
+  registerWallet(updatedData: WalletData) {
     try {
       let walletId: number
-      if (account in this.organizerData.coordinatorData) {
-        const walletCount = Object.keys(this.organizerData.coordinatorData).length
-        walletId = (walletCount ?? 0) + 1     
+      const walletData = this.organizerData.walletData
+      if (updatedData.id) {
+        walletId = updatedData.id
+        logger.info(`registerWallet - update wallet-${walletId} data `)
+        walletData.find((data, index) => {
+          if (data.id == updatedData.id) {
+            walletData[index] = {...updatedData}
+          }
+        })
       } else {
-        walletId = this.organizerData.coordinatorData[account].id!
+        logger.debug(`not found walletId calc id and update`)
+        walletId = walletData.length + 1
+        this.organizerData.walletData.push({id: walletId, ...updatedData})
       }
-
-      logger.debug(
-        `Current length ${walletId}, ${logAll(
-          this.organizerData.walletData,
-        )}`,
-      )
-  
-      this.organizerData.walletData[account] = {
-        id: walletId,
-        weiPerByte
-      }
-  
-      // Queue for contol tx flow rate
-      const allWalletQueues = this.organizerQueue.addWalletQueue(
-        `wallet${walletId}`,
-      )
-      logger.trace(`registered wallet queues are ${logAll(allWalletQueues)}`)
       return walletId
     } catch (error) {
       logger.error(`Error on registering wallet - ${error}`)
-      return
+      return 0
     }
   }
 
@@ -175,7 +165,7 @@ export class OrganizerApi {
     const watchTargetContracts = [config.zkopruContract, config.auctionContract]
 
     // TODO : consider reorg for data store, It might need extra fields
-    web3.eth.subscribe('newBlockHeaders').on('data', async function(data) {
+    web3.eth.subscribe('newBlockHeaders').on('data', async function (data) {
       const blockData = await web3.eth.getBlock(data.hash)
       if (blockData.transactions) {
         blockData.transactions.forEach(async txHash => {
@@ -222,7 +212,7 @@ export class OrganizerApi {
     })
 
     app.get('/registered', async (_, res) => {
-      res.send({coordinators: this.organizerData.coordinatorData, wallets: this.organizerData.walletData})
+      res.send({ coordinators: this.organizerData.coordinatorData, wallets: this.organizerData.walletData })
     })
 
     app.get(`/auctionStatus`, async (_, res) => {
@@ -249,30 +239,19 @@ export class OrganizerApi {
 
       // The test wallet's address will be updated after first deposit
       if (data.role === 'wallet') {
-        if (data.params?.id) {
-          const configData = data.params as WalletParams
-          logger.info(`updating address ${data.id} as ${configData.weiPerByte}`)
-
-          this.organizerData.walletData[data.from] = {
-            id: configData.id,
-            weiPerByte: configData.weiPerByte
-          }
-          // Does not worry about racing condition
-          // wallet watching blocks then follow the sequence
-          this.lastDepositerID = configData.id!
-          res.send({ id: data.params.id, message: "registered"})
-          return
-        }
         const registeredId = await this.registerLock.acquire('wallet', () => {
-          return this.registerWallet(data.from, 0) // only get id number before deposit to registration
+          return this.registerWallet(data.params as WalletData) // only get id number before deposit to registration
         })
-        res.send({ id: registeredId, message: "pending" })
+        if (data.params?.id == registeredId) {
+          res.send({ id: registeredId, message: "registered" })
+        } else {
+          res.send({ id: registeredId, message: "waiting deposit for registeration" })
+        }
       } else if (data.role === 'coordinator') {
-        const coordinatorParams = data.params as CoordinatorParams
         const registeredId = await this.registerLock.acquire(
           'coordinator',
           () => {
-            return this.registerCoordinator(data.from, coordinatorParams)
+            return this.registerCoordinator(data.params as CoordinatorData) // only get id number before deposit to
           })
         res.send({ id: registeredId, message: "registered" })
       } else {
@@ -287,7 +266,7 @@ export class OrganizerApi {
       }
 
       const data = JSON.parse(req.body)
-      if (+data.ID === this.lastDepositerID + 1) {
+      if ( this.lastDepositerID + 1 === +data.id ) {
         res.send(true)
       } else {
         res.send(false)
@@ -367,7 +346,6 @@ export class OrganizerApi {
       res.status(200).send({ currentTxs: remainJobs })
     })
 
-    // TODO : create metric with prom-client
     app.post('/selectRate', async (req, res) => {
       try {
         const data = JSON.parse(req.body)

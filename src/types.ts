@@ -10,25 +10,19 @@ interface GasData {
   gasUsed?: number
 }
 
-export interface WalletParams {
+export interface WalletData {
   id?: number
+  from: string
   weiPerByte: number
 }
 
-export interface WalletData  {
-  [account: string]: WalletParams
-}
-
-export interface CoordinatorParams {
+export interface CoordinatorData {
   id?: number
   url: string
+  from: string
   maxBytes: number
   priceMultiplier: number
   maxBid: number
-}
-
-export interface CoordinatorData {
-  [account: string]: CoordinatorParams
 }
 
 export interface OrganizerConfig extends OrganizerQueueConfig {
@@ -38,16 +32,12 @@ export interface OrganizerConfig extends OrganizerQueueConfig {
 
 export interface OrganizerContext {
   web3: Web3
-  coordinators: CoordinatorData
+  coordinators: CoordinatorData[]
 }
 
-export interface RegisterData {
-  role: 'wallet' | 'coordinator'
-  id?: number
-  from: string
-  url: string
-  params?: WalletParams | CoordinatorParams
-}
+export type RegisterData = 
+| { role : 'wallet', params: WalletData }
+| { role : 'coordinator', params: CoordinatorData } 
 
 export interface TxData {
   [txHash: string]: {
@@ -91,6 +81,6 @@ export interface OrganizerData {
     proposeData: ProposeData[]
     gasTable: { [sig: string]: GasData[] }
   }
-  coordinatorData: CoordinatorData
-  walletData: WalletData
+  coordinatorData: CoordinatorData[]
+  walletData: WalletData[]
 }
