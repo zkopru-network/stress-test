@@ -21,7 +21,7 @@ async function runBlockTurner() {
   logger.info(`Standby for All wallets are registered to organizer`)
   while (!ready) {
     try {
-      const registerResponse = await fetch(`${organizerUrl}/registered`, {
+      const registerResponse = await fetch(`${organizerUrl}/registered-nodes`, {
         method: 'get',
       })
       const walletData = await registerResponse.json()

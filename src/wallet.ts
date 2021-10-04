@@ -34,7 +34,7 @@ async function runGenerator() {
   logger.info(`Standby for deposit are ready`)
   while (!ready) {
     try {
-      const readyResponse = await fetch(`${organizerUrl}/canDeposit`, {
+      const readyResponse = await fetch(`${organizerUrl}/can-deposit`, {
         method: 'post',
         body: JSON.stringify({
           id: registered.id,

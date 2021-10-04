@@ -169,7 +169,7 @@ export class TransferGenerator extends ZkWalletAccount {
     while (this.isActive) {
       // TODO: how to recognize target queue is changed?
       // get TPS from organizer... or get sum of all tx in wait active delayes...
-      const response = await fetch(`${organizerUrl}/txsInQueues`, {
+      const response = await fetch(`${organizerUrl}/txs-in-queues`, {
         method: 'get',
       })
       const { currentTxs } = await response.json()

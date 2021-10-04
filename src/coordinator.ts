@@ -109,7 +109,7 @@ async function testCoodinator() {
         layer1BlockNumber: blockNumber,
       }
       try {
-        const response = await fetch(`${organizerUrl}/propose`, {
+        const response = await fetch(`${organizerUrl}/propose-blocks`, {
           method: 'post',
           body: JSON.stringify(proposeData),
         })

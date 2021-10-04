@@ -207,19 +207,19 @@ export class OrganizerApi {
       res.send(this.contractsReady)
     })
 
-    app.get(`/txData`, async (_, res) => {
+    app.get(`/tx-data`, async (_, res) => {
       res.send(this.organizerData.layer1.txData)
     })
 
-    app.get('/registered', async (_, res) => {
+    app.get('/registered-nodes', async (_, res) => {
       res.send({ coordinators: this.organizerData.coordinatorData, wallets: this.organizerData.walletData })
     })
 
-    app.get(`/auctionStatus`, async (_, res) => {
+    app.get(`/auction-status`, async (_, res) => {
       res.send(this.organizerData.layer1.auctionData)
     })
 
-    app.get(`/proposedBlocks`, async (req, res) => {
+    app.get(`/proposed-status`, async (req, res) => {
       let limit = 100 // about 44kb
       if (req.query.limit) {
         limit = parseInt(req.query.limit as string, 10)
@@ -259,7 +259,7 @@ export class OrganizerApi {
       }
     })
 
-    app.post('/canDeposit', async (req, res) => {
+    app.post('/can-deposit', async (req, res) => {
       if (!this.contractsReady) {
         res.send(false)
         return
@@ -273,7 +273,7 @@ export class OrganizerApi {
       }
     })
 
-    app.post('/propose', async (req, res) => {
+    app.post('/propose-blocks', async (req, res) => {
       try {
         const data = JSON.parse(req.body) as ProposeData
         const {
@@ -337,16 +337,16 @@ export class OrganizerApi {
       }
     })
 
-    app.get('/currentRate', async (_, res) => {
+    app.get('/current-rate', async (_, res) => {
       res.send(this.organizerQueue.currentRate())
     })
 
-    app.get('/txsInQueues', async (_, res) => {
+    app.get('/txs-in-queues', async (_, res) => {
       const remainJobs = await this.organizerQueue.allRemainingJobs()
       res.status(200).send({ currentTxs: remainJobs })
     })
 
-    app.post('/selectRate', async (req, res) => {
+    app.post('/select-rate', async (req, res) => {
       try {
         const data = JSON.parse(req.body)
         const { selectRate } = data
