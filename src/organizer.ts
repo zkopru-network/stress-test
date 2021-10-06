@@ -7,7 +7,7 @@ import { OrganizerApi } from './organizer-api'
 
 startLogger('ORGANIZER_LOG')
 
-logger.info('Organizer Initializing')
+logger.info('stress-test/organizer.ts - organizer initializing')
 
 const isDevelopment = process.env.DEVELOPMENT
 
@@ -42,3 +42,4 @@ const organizerConfig: OrganizerConfig = {
 
 const organizer = new OrganizerApi(organierContext, organizerConfig)
 organizer.start()
+logger.info('stress-test/organizer.ts - organizer started')

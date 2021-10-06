@@ -25,7 +25,7 @@ async function dnsLookup(hostname: string) {
 }
 
 async function testCoodinator() {
-  logger.info('Run Test Coodinator')
+  logger.info('stress-test/coordinator.ts - run test coodinator')
   const { hdWallet, mockupDB, webSocketProvider } = await getBase(
     config.testnetUrl,
     config.mnemonic,
@@ -76,9 +76,9 @@ async function testCoodinator() {
     }),
   })
   if (registerResponse.status !== 200) {
-    logger.warn(`Registration failed on the organizer : ${await registerResponse.text()}`)
+    logger.warn(`stress-test/coordinator.ts - registration failed on the organizer: ${await registerResponse.text()}`)
   }
-  logger.info(`coordinator registered : ${registerResponse.json()}`)
+  logger.info(`stress-test/coordinator.ts - coordinator registered: ${registerResponse.json()}`)
 
   let prevBlockHash: string = config.genesisHash
   let currentBlockHash = ''
@@ -95,7 +95,7 @@ async function testCoodinator() {
       parentsBlockHash: prevBlockHash,
       txcount: block.body.txs.length,
     }
-    logger.info(`Proposed a new block : ${currentBlockHash}`)
+    logger.info(`stress-test/coordinator.ts - proposed a new block: ${currentBlockHash}`)
     return block
   }
 
@@ -114,15 +114,15 @@ async function testCoodinator() {
           body: JSON.stringify(proposeData),
         })
         if (response.status !== 200) {
-          logger.warn(`Organizer well not received : ${await response.text()}`)
+          logger.warn(`stress-test/coordinator.ts - response not 200 for 'propose-blocks' : ${await response.text()}`)
         }
         prevBlockHash = currentBlockHash
         proposeNum += 1
       } catch (error) {
-        logger.error(`Failed to send proposeData to organizer`)
+        logger.error(`stress-test/coordinator.ts - failed to send proposeData to organizer: ${error}`)
       }
     } else {
-      logger.warn(`Propose Tx ${proposeData.layer1TxHash} reverted`)
+      logger.warn(`stress-test/coordinator.ts - propose tx reverted: ${proposeData.layer1TxHash}`)
     }
   }
 

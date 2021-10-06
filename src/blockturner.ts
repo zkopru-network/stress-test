@@ -18,7 +18,7 @@ startLogger(`./BLOCKTURNNER_LOG`)
 async function runBlockTurner() {
   // TODO : refactor waiting trigger as deposit event listen
   let ready = false
-  logger.info(`Standby for All wallets are registered to organizer`)
+  logger.info(`stress-test/blockturner.ts - standby for all wallets are registered to organizer`)
   while (!ready) {
     try {
       const registerResponse = await fetch(`${organizerUrl}/registered-nodes`, {
@@ -33,13 +33,13 @@ async function runBlockTurner() {
         ready = true
       }
     } catch (error) {
-      logger.info(`Error checking organizer ready - ${error}`)
+      logger.error(`stress-test/blockturner.ts - error checking organizer ready : ${error}`)
     }
     await sleep(14000)
   }
   await sleep(35000)
 
-  logger.info('Layer2 block turner Initializing')
+  logger.info('stress-test/blockturner.ts - layer2 block turner initializing')
   const { hdWallet, mockupDB, webSocketProvider } = await getBase(
     config.testnetUrl,
     config.mnemonic,
@@ -76,7 +76,7 @@ async function runBlockTurner() {
   let depositTimer
   function depositLater() {
     depositTimer = setTimeout(async () => {
-      logger.info(`No proposal detected in about 15 blocks, Sending deposit Tx`)
+      logger.info(`stress-test/blockturner.ts - no proposal detected in about 15 blocks, sending deposit tx`)
       const result = await turner.depositEther(
         toWei('1', 'wei'),
         toWei('0.1'),
@@ -93,12 +93,12 @@ async function runBlockTurner() {
   walletNode.layer1.coordinator.events
     .NewProposal({ fromBlock: lastProposalAt })
     .on('connected', subId => {
-      logger.info(`Additional proposal event watch Id: ${subId}`)
+      logger.info(`stress-test/blockturner.ts - additional proposal event watch Id : ${subId}`)
     })
     .on('data', async event => {
       const { returnValues, blockNumber } = event
       const { proposalNum, blockHash } = returnValues
-      logger.info(`newProposal: ${proposalNum} - ${blockHash} @ ${blockNumber}`)
+      logger.trace(`stress-test/blockturner.ts - runBlockTurner : proposalnum(${proposalNum}) - blockHash(${blockHash})@blockNumber(${blockNumber})`)
       lastProposalAt = blockNumber
 
       // Reset timer for deposit

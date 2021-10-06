@@ -77,7 +77,7 @@ export class TransferGenerator extends ZkWalletAccount {
   }
 
   async startWorker() {
-    logger.info(`Worker started as 'wallet${this.id}'`)
+    logger.info(`stress-test/generator.ts - worker started as 'wallet${this.id}'`)
     const worker = new Worker<ZkTxData,any,string>(
       `wallet${this.id}`,
       async (job: ZkTxJob) => {
@@ -88,10 +88,10 @@ export class TransferGenerator extends ZkWalletAccount {
             await this.unlockUtxos(tx.inflow)
             throw Error(await response.text())
           } else {
-            logger.info(`generator/startWroker - response status is 200`)
+            logger.info(`stress-test/generator.ts - sendLyaer2Tx response is 200`)
           }
         } catch (error) {
-          logger.error(`Error on worker process : ${error}`)
+          logger.error(`stress-test/generator.ts -  error on worker process : ${error}`)
         }
       },
       { connection: this.queueConnection },
@@ -99,14 +99,14 @@ export class TransferGenerator extends ZkWalletAccount {
 
     worker.on('completed', (job: ZkTxJob) => {
       logger.info(
-        `Worker job salt ${logAll(job.data.tx.inflow[0].salt)} completed`,
+        `stress-test/generator.ts - job salt ${job.data.tx.inflow[0].salt.toNumber()} completed`,
       )
     })
 
     const walletScheduler = new QueueScheduler(`wallet${this.id}`, {
       connection: this.queueConnection,
     })
-    logger.info(`${walletScheduler.name} scheduler on`)
+    logger.info(`stress-test/generator.ts -  ${walletScheduler.name} scheduler on`)
   }
 
   async startGenerator() {
@@ -122,12 +122,12 @@ export class TransferGenerator extends ZkWalletAccount {
         Fp.from(1),
       )
       if (!result) {
-        throw new Error(' Deposit Transaction Failed!')
+        throw new Error('deposit transaction failed')
       } else {
-        logger.info(`Deposit Tx sent`)
+        logger.info(`stress-test/generator.ts - deposit Tx sent`)
       }
     } catch (err) {
-      logger.error(err)
+      logger.error(`stress-test/generator.ts - error ${err}`)
     }
 
     while (!this.isActive) {
@@ -150,7 +150,7 @@ export class TransferGenerator extends ZkWalletAccount {
           }),
         })
         logger.info(
-          `Deposit Tx is processed, then registered as ${id} this wallet to Organizer`,
+          `stress-test/generator.ts -  deposit Tx is processed. this wallet registered as ${id} to the organizer`,
         )
       }
     }
@@ -170,13 +170,13 @@ export class TransferGenerator extends ZkWalletAccount {
         await sleep(1000)
         continue
       } else {
-        logger.debug(`current job count ${currentTxs}`)
+        logger.debug(`stress-test/generator.ts - current job count ${currentTxs}`)
       }
 
       const unspentUTXO = await this.getUtxos(this.account, UtxoStatus.UNSPENT)
 
       if (unspentUTXO.length === 0) {
-        logger.info('No Spendable Utxo, wait until available')
+        logger.debug('stress-test/generator.ts - no spendable Utxo, wait until available')
         await sleep(5000)
         continue
       }
@@ -224,16 +224,16 @@ export class TransferGenerator extends ZkWalletAccount {
             }
           }),
         }
-        logger.trace(`Created ZkTx : ${logAll(parsedZkTx)}`)
+        logger.debug(`stress-test/generator.ts - created zktx: ${logAll(parsedZkTx)}`)
         try {
           const zkTx = await this.shieldTx({ tx })
           this.usedUtxoSalt.add(sendableUtxo.salt.toNumber())
           this.queues.mainQueue.add(`wallet${this.id}`, { tx, zkTx })
         } catch (err) {
-          logger.error(err)
+          logger.error(`stress-test/generator.ts - error while shielding then adding queue ${err}`)
         }
       } else {
-        logger.debug(`No available utxo for now wait 5 sec`)
+        logger.debug(`stress-test/generator.ts - no available utxo for now wait 5 sec`)
         await sleep(5000)
       }
     }

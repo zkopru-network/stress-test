@@ -65,20 +65,20 @@ export class OrganizerApi {
       const coordinatorData = this.organizerData.coordinatorData
       if (updatedData.id) {
         coordinatorId = updatedData.id
-        logger.debug(`registerCoordinator - update coordinator-${coordinatorId} data`)
+        logger.info(`stress-test/organizer-api.ts - update coordinator-${coordinatorId} data`)
         coordinatorData.find((data, index) => {
           if (data.id == coordinatorId) {
             coordinatorData[index] = {...updatedData}
           }
         })
       } else {
-        logger.debug(`registerCoordinator - register new coordinator`)
+        logger.info(`stress-test/organizer-api.ts - register new coordinator`)
         coordinatorId = coordinatorData.length + 1
         coordinatorData.push({id: coordinatorId, ...updatedData})
       }
       return coordinatorId
     } catch (error) {
-      logger.warn(`Error on registering coordinator - ${error}`)
+      logger.warn(`stress-test/organizer-api.ts - error on registering coordinator: ${error}`)
       return 0
     }
   }
@@ -89,7 +89,7 @@ export class OrganizerApi {
       const walletData = this.organizerData.walletData
       if (updatedData.id) {
         walletId = updatedData.id
-        logger.info(`registerWallet - update wallet-${walletId} data `)
+        logger.info(`stress-test/organizer-api.ts - registered wallet${walletId} updated`)
         walletData.find((data, index) => {
           if (data.id == updatedData.id) {
             walletData[index] = {...updatedData}
@@ -97,17 +97,17 @@ export class OrganizerApi {
           }
         })
       } else {
-        logger.debug(`Not found walletId, count registered wallets then use it id and update`)
+        logger.info(`stress-test/organizer-api.ts - not found walletId, count registered wallets then use it id and update`)
         walletId = walletData.length + 1
         this.organizerData.walletData.push({id: walletId, ...updatedData})
         const allWalletQueues = this.organizerQueue.addWalletQueue(
           `wallet${walletId}`,
         )
-        logger.info(`registered wallet queues are ${logAll(allWalletQueues)}`) // TODO: delete before commit
+        logger.info(`stress-test/organizer-api.ts - queues for wallets: ${allWalletQueues}`)
       }
       return walletId
     } catch (error) {
-      logger.error(`Error on registering wallet - ${error}`)
+      logger.error(`stress-test/organizer-api.ts - error on registering wallet: ${error}`)
       return 0
     }
   }
@@ -236,9 +236,9 @@ export class OrganizerApi {
       let data: RegisterData
       try {
         data = JSON.parse(req.body) as RegisterData
-        logger.info(`register received data ${logAll(data)}`)
+        logger.trace(`stress-test/organizer-api.ts - register received data ${logAll(data)}`)
       } catch (err) {
-        logger.error(`registration error ${err}`)
+        logger.error(`stress-test/organizer-api.ts - register error ${err}`)
         return
       }
 
@@ -359,7 +359,7 @@ export class OrganizerApi {
         const rateNames = this.organizerQueue.config.rates.map(rate => {
           return rate.name
         })
-        logger.info(`selectable rates ${logAll(rateNames)}`)
+        logger.info(`stress-test/organizer-api.ts - selectable rates ${logAll(rateNames)}`)
 
         if (!rateNames.includes(selectRate)) {
           res.status(406).send(`only selectable rates are ${logAll(rateNames)}`)
@@ -379,27 +379,27 @@ export class OrganizerApi {
     })
 
     app.listen(this.config.organizerPort, () => {
-      logger.info(`Server is running`)
+      logger.info(`stress-test/organizer-api.ts - server is running`)
     })
 
     // for development
     if (this.config.dev) {
       this.contractsReady = true
-      logger.info(`Development : zkopru contract are ready`)
+      logger.info(`stress-test/organizer-api.ts - zkopru contract are ready`)
     } else {
       const readySubscribtion = await this.checkReady()
 
-      logger.info(`Waiting zkopru contracts are ready`)
+      logger.info(`stress-test/organizer-api.ts - Waiting zkopru contracts are ready`)
       while (this.contractsReady === false) {
         await sleep(5000)
       }
 
       await readySubscribtion.unsubscribe((error, success) => {
         if (success) {
-          logger.info('successfully unsubscribe "ready", run block watcher')
+          logger.info('stress-test/organizer-api.ts - successfully unsubscribe "ready", run block watcher')
         }
         if (error) {
-          logger.error(`failed to unsubscribe "ready" `)
+          logger.error(`stress-test/organizer-api.ts - failed to unsubscribe "ready": ${error} `)
         }
       })
 

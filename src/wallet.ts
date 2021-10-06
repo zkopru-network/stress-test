@@ -14,7 +14,7 @@ const redisIp = process.env.REDIS_IP ?? `redis`
 const organizerUrl = process.env.ORGANIZER_URL ?? 'http://organizer:8080'
 
 async function runGenerator() {
-  logger.info('Wallet Initializing - get ID from organizer')
+  logger.info(`stress-test/wallet.ts - wallet Initializing, get 'id' from organizer`)
   const registerResponse = await fetch(`${organizerUrl}/register`, {
     method: 'post',
     body: JSON.stringify({
@@ -27,11 +27,11 @@ async function runGenerator() {
   })
   const registered = await registerResponse.json()
 
-  logger.info(`Wallet selected account index ${registered.id + 3}`)
+  logger.info(`stress-test/wallet.ts - wallet selected account index ${registered.id + 3}`)
 
   // Wait deposit sequence
   let ready = false
-  logger.info(`Standby for deposit are ready`)
+  logger.info(`stress-test/wallet.ts - standby for 'can-deposit' are ready`)
   while (!ready) {
     try {
       const readyResponse = await fetch(`${organizerUrl}/can-deposit`, {
@@ -42,7 +42,7 @@ async function runGenerator() {
       })
       ready = await readyResponse.json()
     } catch (error) {
-      logger.info(`Error checking organizer ready - ${error}`)
+      logger.error(`stress-test/wallet.ts - error on checking organizer ready: ${error}`)
     }
     await sleep(5000)
   }
@@ -82,7 +82,7 @@ async function runGenerator() {
 
   const generator = new TransferGenerator(transferGeneratorConfig)
 
-  logger.info(`Start Generate Tansaction`)
+  logger.info(`stress-test/wallet.ts - start transaction generator`)
   await generator.startGenerator()
 }
 
