@@ -19,7 +19,6 @@ export interface GeneratorConfig {
   weiPrice?: string
   id?: number
   redis?: { host: string; port: number }
-  preZkTxPath?: string
 }
 
 interface Queues {
@@ -31,17 +30,14 @@ const organizerUrl = process.env.ORGANIZER_URL ?? 'http://organizer:8080'
 
 //* * Only ETH transafer zkTx generator as 1 inflow 2 outflows */
 export class TransferGenerator extends ZkWalletAccount {
-  id: number
+  id: number | undefined
 
   isActive: boolean
 
-  lastSalt: number
 
   usedUtxoSalt: Set<number>
 
   weiPerBytes: string
-
-  preZkTxPath: string
 
   queues: Queues
 
@@ -49,11 +45,8 @@ export class TransferGenerator extends ZkWalletAccount {
 
   constructor(config: ZkWalletAccountConfig & GeneratorConfig) {
     super(config)
-    this.id = config.id ?? Math.floor(Math.random() * 10000) // TODO : It seems only need in docker environment
+    this.id = config.id
     this.isActive = false
-    this.preZkTxPath =
-      config.preZkTxPath ?? `/proj/packages/generator/zktx/${this.id}`
-    this.lastSalt = 0
     this.usedUtxoSalt = new Set([])
     this.weiPerBytes = config.weiPrice ?? toWei('2000', 'gwei')
 
@@ -84,18 +77,18 @@ export class TransferGenerator extends ZkWalletAccount {
   }
 
   async startWorker() {
-    logger.info(`Worker started`)
-    const worker = new Worker(
+    logger.info(`Worker started as 'wallet${this.id}'`)
+    const worker = new Worker<ZkTxData,any,string>(
       `wallet${this.id}`,
       async (job: ZkTxJob) => {
         try {
           const { tx, zkTx } = job.data
-          const txSalt = tx.inflow[0].salt // TODO : use this for following the sequence as the salt
           const response = await this.sendLayer2Tx(getZkTx(zkTx))
           if (response.status !== 200) {
-            this.lastSalt = txSalt.toNumber()
             await this.unlockUtxos(tx.inflow)
             throw Error(await response.text())
+          } else {
+            logger.info(`generator/startWroker - response status is 200`)
           }
         } catch (error) {
           logger.error(`Error on worker process : ${error}`)
@@ -121,7 +114,6 @@ export class TransferGenerator extends ZkWalletAccount {
       this.node.start()
     }
 
-    // TODO: check first deposit Note hash
     try {
       const result = await this.depositEther(
         toWei('50'),
@@ -146,7 +138,6 @@ export class TransferGenerator extends ZkWalletAccount {
 
       if (+stagedDeposit.merged === 0) {
         this.isActive = true
-        // TODO: replace organizer url from system environment
         const id = await fetch(`${organizerUrl}/register`, {
           method: 'post',
           body: JSON.stringify({

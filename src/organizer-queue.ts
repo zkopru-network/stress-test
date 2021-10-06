@@ -1,6 +1,5 @@
 import { Job, Queue, QueueScheduler, Worker } from 'bullmq'
 import { RawTx, ZkTx } from '@zkopru/transaction'
-import { logger } from '@zkopru/utils'
 
 /*
 Organizer Queue has two types of queue, 'main' and 'sub'.
@@ -84,8 +83,7 @@ export class OrganizerQueue {
         connection,
       })
 
-      subWorkers[queueName] = new Worker<ZkTxData, any, string>(
-        queueName,
+      subWorkers[queueName] = new Worker(queueName,
         async (job: ZkTxJob) => {
           this.queues.wallet[job.name].add(job.name, job.data)
         },
@@ -112,9 +110,6 @@ export class OrganizerQueue {
       main: new Worker<ZkTxData, any, string>(
         'mainQueue',
         async (job: ZkTxJob) => {
-          logger.debug(
-            `mainQueue worker job received jobName: ${job.name} jogData ${job.data}`,
-          )
           this.queues.sub[this.currentQueue].add(job.name, job.data)
         },
         { connection },
