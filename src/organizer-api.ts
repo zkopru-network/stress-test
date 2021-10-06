@@ -93,12 +93,17 @@ export class OrganizerApi {
         walletData.find((data, index) => {
           if (data.id == updatedData.id) {
             walletData[index] = {...updatedData}
+            this.lastDepositerID = walletId
           }
         })
       } else {
-        logger.debug(`not found walletId calc id and update`)
+        logger.debug(`Not found walletId, count registered wallets then use it id and update`)
         walletId = walletData.length + 1
         this.organizerData.walletData.push({id: walletId, ...updatedData})
+        const allWalletQueues = this.organizerQueue.addWalletQueue(
+          `wallet${walletId}`,
+        )
+        logger.info(`registered wallet queues are ${logAll(allWalletQueues)}`) // TODO: delete before commit
       }
       return walletId
     } catch (error) {
