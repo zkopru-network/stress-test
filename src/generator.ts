@@ -125,7 +125,7 @@ export class TransferGenerator extends ZkWalletAccount {
     try {
       const result = await this.depositEther(
         toWei('50'),
-        toWei('0.01'),
+        toWei('0.1'),
         this.account?.zkAddress,
         Fp.from(1),
       )

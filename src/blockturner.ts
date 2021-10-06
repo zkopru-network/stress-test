@@ -79,7 +79,7 @@ async function runBlockTurner() {
       logger.info(`No proposal detected in about 15 blocks, Sending deposit Tx`)
       const result = await turner.depositEther(
         toWei('1', 'wei'),
-        toWei('0.005'),
+        toWei('0.1'),
       )
       if (!result) {
         throw new Error('Deposit Transaction Failed!')
