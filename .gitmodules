@@ -1,0 +1,4 @@
+[submodule "zkopru"]
+	path = zkopru
+	url = http://github.com/zkopru-networks/zkopru
+	branch = develop
