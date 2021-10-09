@@ -1,6 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import fs from 'fs'
 import AsyncLock from 'async-lock'
 import express from 'express'
+import si from 'systeminformation'
 import { logger, sleep } from '@zkopru/utils'
 import { Layer1, IBurnAuction } from '@zkopru/contracts'
 import { OrganizerQueue } from './organizer-queue'
@@ -23,6 +25,8 @@ export class OrganizerApi {
 
   context: OrganizerContext
 
+  operationInfo: any
+
   contractsReady: boolean
 
   organizerData: OrganizerData
@@ -37,6 +41,7 @@ export class OrganizerApi {
 
   constructor(context: OrganizerContext, organizerConfig: OrganizerConfig) {
     this.context = context
+    this.operationInfo = {} // TODO: set type
     this.organizerData = {
       layer1: {
         txData: [],
@@ -68,13 +73,13 @@ export class OrganizerApi {
         logger.info(`stress-test/organizer-api.ts - update coordinator-${coordinatorId} data`)
         coordinatorData.find((data, index) => {
           if (data.id == coordinatorId) {
-            coordinatorData[index] = {...updatedData}
+            coordinatorData[index] = { ...updatedData }
           }
         })
       } else {
         logger.info(`stress-test/organizer-api.ts - register new coordinator`)
         coordinatorId = coordinatorData.length + 1
-        coordinatorData.push({id: coordinatorId, ...updatedData})
+        coordinatorData.push({ id: coordinatorId, ...updatedData })
       }
       return coordinatorId
     } catch (error) {
@@ -92,14 +97,14 @@ export class OrganizerApi {
         logger.info(`stress-test/organizer-api.ts - registered wallet${walletId} updated`)
         walletData.find((data, index) => {
           if (data.id == updatedData.id) {
-            walletData[index] = {...updatedData}
+            walletData[index] = { ...updatedData }
             this.lastDepositerID = walletId
           }
         })
       } else {
         logger.info(`stress-test/organizer-api.ts - not found walletId, count registered wallets then use it id and update`)
         walletId = walletData.length + 1
-        this.organizerData.walletData.push({id: walletId, ...updatedData})
+        this.organizerData.walletData.push({ id: walletId, ...updatedData })
         const allWalletQueues = this.organizerQueue.addWalletQueue(
           `wallet${walletId}`,
         )
@@ -138,6 +143,50 @@ export class OrganizerApi {
       // store bidData to history
       auctionData[roundIndex].bidHistory.push(bidData)
     })
+  }
+
+  async getOperationInfo() {
+    // Organizer start time
+    const startTime = Date.now()
+
+    // host systeminformation
+    const cpuInfo = await si.cpu()
+    const memInfo = await si.mem()
+
+    // git branch and commit heash
+    const targetMeta = ['stress-test', 'zkopru']
+    let gitData = {}
+    targetMeta.forEach(repo => {
+      let branch: string
+      let commit: string
+      const headFile = (`metadata/${repo}/HEAD`)
+
+      if (fs.existsSync(headFile)) {
+        const head = fs.readFileSync(`metadata/${repo}/HEAD`)
+        const headPath = head.toString().split(" ")[1].trim()
+        const headHash = fs.readFileSync(`metadata/${repo}/${headPath}`)
+
+        branch = headPath.split("/").slice(2,).join("/"),
+          commit = headHash.toString().trim()
+      } else {
+        branch = "Not Found",
+          commit = "0000000000000000000000000000000000000000"
+      }
+      gitData[repo] = { branch, commit }
+    })
+
+    const info = {
+      operation: {
+        startTime,
+        endTime: 0,
+      },
+      systmeInfomation: {
+        cpu: cpuInfo,
+        memory: memInfo
+      },
+      git: gitData
+    }
+    return info
   }
 
   private async checkReady() {
@@ -205,11 +254,18 @@ export class OrganizerApi {
   }
 
   async start() {
+    this.operationInfo = await this.getOperationInfo()
+
     const app = express()
     app.use(express.text())
 
     app.get(`/ready`, async (_, res) => {
       res.send(this.contractsReady)
+    })
+
+    app.get(`/info`, async (_, res) => {
+      this.operationInfo.operation.checkTime = Date.now()
+      res.send(this.operationInfo)
     })
 
     app.get(`/tx-data`, async (_, res) => {
@@ -271,7 +327,7 @@ export class OrganizerApi {
       }
 
       const data = JSON.parse(req.body)
-      if ( this.lastDepositerID + 1 === +data.id ) {
+      if (this.lastDepositerID + 1 === +data.id) {
         res.send(true)
       } else {
         res.send(false)

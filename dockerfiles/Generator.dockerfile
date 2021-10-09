@@ -27,6 +27,12 @@ WORKDIR /generator
 # Copy SNARK keys
 COPY zkopru/packages/circuits/keys /proj/keys
 
+# COPY git data for generating metadata
+COPY .git/HEAD metadata/stress-test/HEAD
+COPY .git/refs metadata/stress-test/refs
+COPY zkopru/.git/HEAD metadata/zkopru/HEAD
+COPY zkopru/.git/refs metadata/zkopru/refs
+
 # Copy package.json
 COPY zkopru/.package-dev.json /generator/zkopru/package.json
 COPY zkopru/lerna.json /generator/zkopru/lerna.json
