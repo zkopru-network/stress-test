@@ -76,6 +76,7 @@ export interface ProposeData {
 
 export interface OrganizerData {
   layer1: {
+    blockStats: any
     txData: TxData[]
     auctionData: AuctionData
     proposeData: ProposeData[]

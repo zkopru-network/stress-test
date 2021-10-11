@@ -41,9 +41,12 @@ export class OrganizerApi {
 
   constructor(context: OrganizerContext, organizerConfig: OrganizerConfig) {
     this.context = context
-    this.operationInfo = {} // TODO: set type
+    this.operationInfo = {"testnetNode": process.env.TESTNET ?? 'Unknown' } // TODO: set type
     this.organizerData = {
       layer1: {
+        blockStats: {
+          gasLimits: []
+        },
         txData: [],
         auctionData: {},
         gasTable: {},
@@ -146,6 +149,9 @@ export class OrganizerApi {
   }
 
   async getOperationInfo() {
+    // Testnet Info
+    const { web3 } = this.context
+
     // Organizer start time
     const startTime = Date.now()
 
@@ -176,6 +182,10 @@ export class OrganizerApi {
     })
 
     const info = {
+      testnetInfo: {
+        nodeInfo: await web3.eth.getNodeInfo(),
+        chainId: await web3.eth.getChainId(),
+      },
       operation: {
         startTime,
         endTime: 0,
@@ -214,13 +224,18 @@ export class OrganizerApi {
 
   private async watchLayer1() {
     const { web3 } = this.context
-    const { txData, gasTable } = this.organizerData.layer1 // Initialized by constructor
+
+    const { blockStats, txData, gasTable, } = this.organizerData.layer1 // Initialized by constructor
 
     const watchTargetContracts = [config.zkopruContract, config.auctionContract]
 
     // TODO : consider reorg for data store, It might need extra fields
     web3.eth.subscribe('newBlockHeaders').on('data', async function (data) {
       const blockData = await web3.eth.getBlock(data.hash)
+
+      blockStats.gasLimits.push(blockData.gasLimit)
+      
+
       if (blockData.transactions) {
         blockData.transactions.forEach(async txHash => {
           const tx = await web3.eth.getTransaction(txHash)
