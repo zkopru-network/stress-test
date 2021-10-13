@@ -41,12 +41,10 @@ export class OrganizerApi {
 
   constructor(context: OrganizerContext, organizerConfig: OrganizerConfig) {
     this.context = context
-    this.operationInfo = {"testnetNode": process.env.TESTNET ?? 'Unknown' } // TODO: set type
+    this.operationInfo = {} // TODO: set type
     this.organizerData = {
       layer1: {
-        blockStats: {
-          gasLimits: []
-        },
+        blockStats: [],
         txData: [],
         auctionData: {},
         gasTable: {},
@@ -224,17 +222,15 @@ export class OrganizerApi {
 
   private async watchLayer1() {
     const { web3 } = this.context
-
-    const { blockStats, txData, gasTable, } = this.organizerData.layer1 // Initialized by constructor
+    const { blockStats, txData, gasTable } = this.organizerData.layer1 // Initialized by constructor
 
     const watchTargetContracts = [config.zkopruContract, config.auctionContract]
 
     // TODO : consider reorg for data store, It might need extra fields
     web3.eth.subscribe('newBlockHeaders').on('data', async function (data) {
       const blockData = await web3.eth.getBlock(data.hash)
-
-      blockStats.gasLimits.push(blockData.gasLimit)
-      
+      const { number, gasLimit, gasUsed } = blockData
+      blockStats.push({blockNumber: number, gasLimit, gasUsed})
 
       if (blockData.transactions) {
         blockData.transactions.forEach(async txHash => {
@@ -264,7 +260,7 @@ export class OrganizerApi {
             txData.push({ [txHash]: { ...tx, ...receipt } })
           }
         })
-      }
+      }     
     })
   }
 
@@ -281,6 +277,16 @@ export class OrganizerApi {
     app.get(`/info`, async (_, res) => {
       this.operationInfo.operation.checkTime = Date.now()
       res.send(this.operationInfo)
+    })
+
+    app.get(`/block-data`, async (req, res) => {
+      let limit = 100
+
+      if (req.query.limit) {
+        limit = parseInt(req.query.limit as string, 10)
+      }
+
+      res.send(this.organizerData.layer1.blockStats.slice(-1 * limit))
     })
 
     app.get(`/tx-data`, async (_, res) => {
@@ -301,6 +307,15 @@ export class OrganizerApi {
         limit = parseInt(req.query.limit as string, 10)
       }
       res.send(this.organizerData.layer1.proposeData.slice(-1 * limit))
+    })
+
+    app.get(`/download`, async (_, res) => {
+      const allData = {
+        info: this.operationInfo,
+        organizerData: this.organizerData
+      }
+      fs.writeFileSync('resultData.json', JSON.stringify(allData)) // TODO: using uuid for fileame
+      res.download('resultData.json')
     })
 
     app.post('/register', async (req, res) => {
