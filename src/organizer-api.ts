@@ -293,15 +293,15 @@ export class OrganizerApi {
       res.send(this.organizerData.layer1.txData)
     })
 
-    app.get('/registered-nodes', async (_, res) => {
+    app.get('/registered-node-info', async (_, res) => {
       res.send({ coordinators: this.organizerData.coordinatorData, wallets: this.organizerData.walletData })
     })
 
-    app.get(`/auction-status`, async (_, res) => {
+    app.get(`/auction-data`, async (_, res) => {
       res.send(this.organizerData.layer1.auctionData)
     })
 
-    app.get(`/proposed-status`, async (req, res) => {
+    app.get(`/proposed-data`, async (req, res) => {
       let limit = 100 // about 44kb
       if (req.query.limit) {
         limit = parseInt(req.query.limit as string, 10)
@@ -309,7 +309,7 @@ export class OrganizerApi {
       res.send(this.organizerData.layer1.proposeData.slice(-1 * limit))
     })
 
-    app.get(`/download`, async (_, res) => {
+    app.get(`/download-result`, async (_, res) => {
       const allData = {
         info: this.operationInfo,
         organizerData: this.organizerData
@@ -393,11 +393,11 @@ export class OrganizerApi {
       }
     })
 
-    app.get('/gastable', (_, res) => {
+    app.get('/gastable-data', (_, res) => {
       res.send(this.organizerData.layer1.gasTable)
     })
 
-    app.get('/tps', (req, res) => {
+    app.get('/tps-data', (req, res) => {
       // TODO : consider might happen uncle block for calculation of tps
       let previousProposeTime: number
       let limit = 1000
