@@ -2,6 +2,7 @@
 import dns from 'dns'
 import fetch from 'node-fetch'
 import { TransactionReceipt } from 'web3-core'
+import { Fp } from '@zkopru/babyjubjub'
 import { Block, FullNode } from '@zkopru/core'
 import { Coordinator } from '@zkopru/coordinator'
 import { logger } from '@zkopru/utils'
@@ -94,6 +95,7 @@ async function testCoodinator() {
       blockHash: currentBlockHash,
       parentsBlockHash: prevBlockHash,
       txcount: block.body.txs.length,
+      paidFee: block.body.txs.reduce((sum, tx) => sum.add(tx.fee), Fp.from(0))
     }
     logger.info(`stress-test/coordinator.ts - proposed a new block: ${currentBlockHash}`)
     return block

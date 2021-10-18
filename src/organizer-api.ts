@@ -39,6 +39,8 @@ export class OrganizerApi {
 
   auction: IBurnAuction
 
+  zkopru: any // TODO: export 'Zkopru' interface in zkopru repo 
+
   constructor(context: OrganizerContext, organizerConfig: OrganizerConfig) {
     this.context = context
     this.operationInfo = {} // TODO: set type
@@ -47,6 +49,7 @@ export class OrganizerApi {
         blockStats: [],
         txData: [],
         auctionData: {},
+        zkopruConfig: {},
         gasTable: {},
         proposeData: []
       },
@@ -119,15 +122,19 @@ export class OrganizerApi {
   }
 
   updateAuctionData() {
-    this.auction.events.NewHighBid().on(`data`, data => {
+    this.auction.events.NewHighBid().on(`data`, async (data) => {
+      const { calcRoundStart } = this.auction.methods
       const { roundIndex, bidder, amount } = data.returnValues
       const { auctionData } = this.organizerData.layer1
       const indexedRound = Object.keys(auctionData)
 
       const bidAmount = parseInt(amount, 10)
+      const startBlock = parseInt(await calcRoundStart(roundIndex).call(), 10)
+
       const bidData: BidData = {
         bidder,
         bidAmount,
+        startBlock,
         txHash: data.transactionHash as string,
         blockNumber: data.blockNumber as number,
       }
@@ -144,6 +151,16 @@ export class OrganizerApi {
       // store bidData to history
       auctionData[roundIndex].bidHistory.push(bidData)
     })
+  }
+
+  async getContractInfo() {
+    this.organizerData.layer1.zkopruConfig = {
+      maxBlockSize: await this.zkopru.methods.MAX_BLOCK_SIZE().call(),
+      maxValidationGas: await this.zkopru.methods.MAX_VALIDATION_GAS().call(),
+      challengePeriod: await this.zkopru.methods.CHALLENGE_PERIOD().call(),
+      minimumStake: await this.zkopru.methods.MINIMUM_STAKE().call(),
+      maxUtxoDepth: await this.zkopru.methods.UTXO_TREE_DEPTH().call(),
+    }
   }
 
   async getOperationInfo() {
@@ -197,6 +214,22 @@ export class OrganizerApi {
     return info
   }
 
+  getWalletJobInfo() {
+    const queueData = this.organizerQueue.queueData
+    const walletKeys = Object.keys(queueData)
+
+    let result: any[] = []
+    walletKeys.forEach(wallet => {
+      result.push(
+        {
+          walletName: wallet,
+          generatedTx: queueData[wallet].txCount,
+          totalSpentFee: queueData[wallet].spentFee.toString()
+        })
+    })
+    return result
+  }
+
   private async checkReady() {
     const { web3 } = this.context
 
@@ -215,7 +248,8 @@ export class OrganizerApi {
         .activeCoordinator()
         .call()
       if (+activeCoordinator) {
-        this.contractsReady = true
+        this.contractsReady = true;
+        await this.getContractInfo()
       }
     })
   }
@@ -230,7 +264,7 @@ export class OrganizerApi {
     web3.eth.subscribe('newBlockHeaders').on('data', async function (data) {
       const blockData = await web3.eth.getBlock(data.hash)
       const { number, gasLimit, gasUsed } = blockData
-      blockStats.push({blockNumber: number, gasLimit, gasUsed})
+      blockStats.push({ blockNumber: number, gasLimit, gasUsed })
 
       if (blockData.transactions) {
         blockData.transactions.forEach(async txHash => {
@@ -260,7 +294,7 @@ export class OrganizerApi {
             txData.push({ [txHash]: { ...tx, ...receipt } })
           }
         })
-      }     
+      }
     })
   }
 
@@ -277,6 +311,10 @@ export class OrganizerApi {
     app.get(`/info`, async (_, res) => {
       this.operationInfo.operation.checkTime = Date.now()
       res.send(this.operationInfo)
+    })
+
+    app.get(`/zkopru-info`, async (_, res) => {
+      res.send(this.organizerData.layer1.zkopruConfig)
     })
 
     app.get(`/block-data`, async (req, res) => {
@@ -374,6 +412,7 @@ export class OrganizerApi {
           parentsBlockHash,
           proposeNum,
           txcount,
+          paidFee,
           layer1TxHash,
           layer1BlockNumber,
         } = data
@@ -383,6 +422,7 @@ export class OrganizerApi {
           blockHash,
           parentsBlockHash,
           txcount,
+          paidFee,
           from,
           layer1TxHash,
           layer1BlockNumber,
@@ -400,7 +440,7 @@ export class OrganizerApi {
     app.get('/tps-data', (req, res) => {
       // TODO : consider might happen uncle block for calculation of tps
       let previousProposeTime: number
-      let limit = 1000
+      let limit = 100
       if (req.query.limit) {
         limit = parseInt(req.query.limit as string, 10)
       }
@@ -417,6 +457,7 @@ export class OrganizerApi {
             previousProposeTime = data.timestamp
             return {
               proposalNum: data.proposeNum,
+              proposedTime: data.timestamp,
               duration,
               txcount: data.txcount,
               tps: data.txcount / duration,
@@ -435,6 +476,10 @@ export class OrganizerApi {
     app.get('/txs-in-queues', async (_, res) => {
       const remainJobs = await this.organizerQueue.allRemainingJobs()
       res.status(200).send({ currentTxs: remainJobs })
+    })
+
+    app.get(`/wallet-jobs-info`, async (_, res) => {
+      res.send(this.getWalletJobInfo())
     })
 
     app.post('/select-rate', async (req, res) => {

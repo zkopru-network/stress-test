@@ -1,5 +1,6 @@
 import { Job, Queue, QueueScheduler, Worker } from 'bullmq'
 import { RawTx, ZkTx } from '@zkopru/transaction'
+import { Fp } from '@zkopru/babyjubjub'
 
 /*
 Organizer Queue has two types of queue, 'main' and 'sub'.
@@ -68,6 +69,14 @@ export class OrganizerQueue {
 
   config: OrganizerQueueConfig
 
+  queueData: {
+    [walletName: string]:
+    {
+      txCount: number,
+      spentFee: Fp
+    }
+  }
+
   constructor(config: OrganizerQueueConfig) {
     this.config = config
 
@@ -93,12 +102,23 @@ export class OrganizerQueue {
         },
       )
 
+      subWorkers[queueName].on('completed', (job: Job) => {
+          // logger.info(`job worker.data object fee.toString: ${job.data.zkTx.fee.toNumber()}}`) // TODO : remove    
+          // logger.info(`Fp 10 ${Fp.from(10)} add it with fee ${Fp.from(10).add(Fp.from(job.data.zkTx.fee))}`)
+          const rateWorkerData = this.queueData[job.name]
+          const { txCount, spentFee } = rateWorkerData
+          this.queueData[job.name].txCount = txCount + 1 // TODO : go to rate worker  
+          this.queueData[job.name].spentFee = spentFee.add(Fp.from(job.data.zkTx.fee.toString()))
+      })
+
       subScheduler[queueName] = new QueueScheduler(queueName, { connection })
     }
 
     const defaultRate = this.config.rates[0]
 
     this.currentQueue = defaultRate.name ?? defaultRate.max.toString()
+
+    this.queueData = {}
 
     this.queues = {
       main: new Queue('mainQueue', { connection }),
@@ -147,6 +167,10 @@ export class OrganizerQueue {
     this.queues.wallet[walletName] = new Queue(walletName, {
       connection: this.config.connection,
     })
+    this.queueData[walletName] = {
+      txCount: 0,
+      spentFee: Fp.from(0)
+    }
     return Object.keys(this.queues.wallet)
   }
 
