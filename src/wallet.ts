@@ -6,7 +6,7 @@ import { logger, sleep } from '@zkopru/utils'
 import { TransferGenerator } from './generator'
 import { getBase, startLogger } from './generator-utils'
 import { config } from './config'
-import { WalletData } from './types'
+import { WalletInfo } from './types'
 
 startLogger(`./WALLET_LOG`)
 
@@ -22,7 +22,7 @@ async function runGenerator() {
       params: { 
         from: '0x0',
         weiPerByte: 0,
-      } as WalletData
+      } as WalletInfo
     }),
   })
   const registered = await registerResponse.json()

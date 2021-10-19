@@ -8,14 +8,21 @@ import { Layer1, IBurnAuction } from '@zkopru/contracts'
 import { OrganizerQueue } from './organizer-queue'
 import { logAll } from './generator-utils'
 import {
+  processConfigurationData,
+  processCoordinatorData,
+  processProposeData,
+  processTxData,
+} from './dataToJson'
+import {
   OrganizerConfig,
   OrganizerContext,
   BidData,
   RegisterData,
   OrganizerData,
   ProposeData,
-  WalletData,
-  CoordinatorData
+  OperationInfo,
+  WalletInfo,
+  CoordinatorInfo
 } from './types'
 import { config } from './config'
 
@@ -24,8 +31,6 @@ export class OrganizerApi {
   config: OrganizerConfig
 
   context: OrganizerContext
-
-  operationInfo: any
 
   contractsReady: boolean
 
@@ -43,18 +48,18 @@ export class OrganizerApi {
 
   constructor(context: OrganizerContext, organizerConfig: OrganizerConfig) {
     this.context = context
-    this.operationInfo = {} // TODO: set type
     this.organizerData = {
+      operationInfo: {},
+      coordinatorInfo: [],
+      walletInfo: [],
       layer1: {
-        blockStats: [],
+        blockData: [],
         txData: [],
         auctionData: {},
         zkopruConfig: {},
         gasTable: {},
         proposeData: []
-      },
-      coordinatorData: [],
-      walletData: [],
+      }
     } // Initialize
 
     this.organizerQueue = new OrganizerQueue(organizerConfig)
@@ -64,14 +69,15 @@ export class OrganizerApi {
 
     this.config = organizerConfig
     this.auction = Layer1.getIBurnAuction(context.web3 as any, config.auctionContract)
+    this.zkopru = Layer1.getZkopru(context.web3 as any, config.zkopruContract)
 
     this.updateAuctionData()
   }
 
-  registerCoordinator(updatedData: CoordinatorData) {
+  registerCoordinator(updatedData: CoordinatorInfo) {
     try {
       let coordinatorId: number
-      const coordinatorData = this.organizerData.coordinatorData
+      const coordinatorData = this.organizerData.coordinatorInfo
       if (updatedData.id) {
         coordinatorId = updatedData.id
         logger.info(`stress-test/organizer-api.ts - update coordinator-${coordinatorId} data`)
@@ -92,13 +98,13 @@ export class OrganizerApi {
     }
   }
 
-  registerWallet(updatedData: WalletData) {
+  registerWallet(updatedData: WalletInfo) {
     try {
       let walletId: number
-      const walletData = this.organizerData.walletData
+      const walletData = this.organizerData.walletInfo
       if (updatedData.id) {
         walletId = updatedData.id
-        logger.info(`stress-test/organizer-api.ts - registered wallet${walletId} updated`)
+        logger.info(`stress-test/organizer-api.ts - registered wallet_${walletId} updated`)
         walletData.find((data, index) => {
           if (data.id == updatedData.id) {
             walletData[index] = { ...updatedData }
@@ -108,9 +114,9 @@ export class OrganizerApi {
       } else {
         logger.info(`stress-test/organizer-api.ts - not found walletId, count registered wallets then use it id and update`)
         walletId = walletData.length + 1
-        this.organizerData.walletData.push({ id: walletId, ...updatedData })
+        this.organizerData.walletInfo.push({ id: walletId, ...updatedData })
         const allWalletQueues = this.organizerQueue.addWalletQueue(
-          `wallet${walletId}`,
+          `wallet_${walletId}`,
         )
         logger.info(`stress-test/organizer-api.ts - queues for wallets: ${allWalletQueues}`)
       }
@@ -167,9 +173,6 @@ export class OrganizerApi {
     // Testnet Info
     const { web3 } = this.context
 
-    // Organizer start time
-    const startTime = Date.now()
-
     // host systeminformation
     const cpuInfo = await si.cpu()
     const memInfo = await si.mem()
@@ -177,6 +180,7 @@ export class OrganizerApi {
     // git branch and commit heash
     const targetMeta = ['stress-test', 'zkopru']
     let gitData = {}
+    
     targetMeta.forEach(repo => {
       let branch: string
       let commit: string
@@ -196,16 +200,16 @@ export class OrganizerApi {
       gitData[repo] = { branch, commit }
     })
 
-    const info = {
+    const info: OperationInfo = {
       testnetInfo: {
         nodeInfo: await web3.eth.getNodeInfo(),
         chainId: await web3.eth.getChainId(),
       },
       operation: {
-        startTime,
+        startTime: Date.now(),
         endTime: 0,
       },
-      systmeInfomation: {
+      systemInformation: {
         cpu: cpuInfo,
         memory: memInfo
       },
@@ -214,20 +218,38 @@ export class OrganizerApi {
     return info
   }
 
-  getWalletJobInfo() {
+  updateWalletData() {
     const queueData = this.organizerQueue.queueData
     const walletKeys = Object.keys(queueData)
+    logger.info(`walletKeys : ${walletKeys}`)
 
-    let result: any[] = []
     walletKeys.forEach(wallet => {
-      result.push(
-        {
-          walletName: wallet,
-          generatedTx: queueData[wallet].txCount,
-          totalSpentFee: queueData[wallet].spentFee.toString()
+      const walletId = parseInt(wallet.split("_")[1])
+
+      this.organizerData.walletInfo
+        .filter(data => data.id == walletId)
+        .map(data => {
+          data.generatedTx = queueData[wallet].txCount
+          data.totalSpentFee = queueData[wallet].spentFee.toString()
         })
     })
-    return result
+  }
+
+  createResult() {
+    const { Performance, recentProposedBlocks } = processProposeData(this.organizerData)
+    const { recentAuctionData, coordinatorInfo } = processCoordinatorData(this.organizerData)
+    return {
+      info: this.organizerData.operationInfo,
+      configuration: processConfigurationData(this.organizerData),
+      testResult: {
+        Performance,
+        recentProposedBlocks,
+        recentAuctionData,
+        coordinatorInfo,
+        walletInfo: this.organizerData.walletInfo,
+        recentTxData: processTxData(this.organizerData)
+      }
+    }
   }
 
   private async checkReady() {
@@ -256,17 +278,17 @@ export class OrganizerApi {
 
   private async watchLayer1() {
     const { web3 } = this.context
-    const { blockStats, txData, gasTable } = this.organizerData.layer1 // Initialized by constructor
+    const { blockData: blockStats, txData, gasTable } = this.organizerData.layer1 // Initialized by constructor
 
     const watchTargetContracts = [config.zkopruContract, config.auctionContract]
 
     // TODO : consider reorg for data store, It might need extra fields
     web3.eth.subscribe('newBlockHeaders').on('data', async function (data) {
       const blockData = await web3.eth.getBlock(data.hash)
-      const { number, gasLimit, gasUsed } = blockData
-      blockStats.push({ blockNumber: number, gasLimit, gasUsed })
+      const { number, hash, gasLimit, gasUsed, transactions } = blockData
+      blockStats.push({ blockNumber: number, blockHash: hash, gasLimit, gasUsed, transactions })
 
-      if (blockData.transactions) {
+      if (transactions) {
         blockData.transactions.forEach(async txHash => {
           const tx = await web3.eth.getTransaction(txHash)
 
@@ -299,7 +321,7 @@ export class OrganizerApi {
   }
 
   async start() {
-    this.operationInfo = await this.getOperationInfo()
+    this.organizerData.operationInfo = await this.getOperationInfo()
 
     const app = express()
     app.use(express.text())
@@ -309,8 +331,7 @@ export class OrganizerApi {
     })
 
     app.get(`/info`, async (_, res) => {
-      this.operationInfo.operation.checkTime = Date.now()
-      res.send(this.operationInfo)
+      res.send(this.organizerData.operationInfo)
     })
 
     app.get(`/zkopru-info`, async (_, res) => {
@@ -324,7 +345,7 @@ export class OrganizerApi {
         limit = parseInt(req.query.limit as string, 10)
       }
 
-      res.send(this.organizerData.layer1.blockStats.slice(-1 * limit))
+      res.send(this.organizerData.layer1.blockData.slice(-1 * limit))
     })
 
     app.get(`/tx-data`, async (_, res) => {
@@ -332,7 +353,7 @@ export class OrganizerApi {
     })
 
     app.get('/registered-node-info', async (_, res) => {
-      res.send({ coordinators: this.organizerData.coordinatorData, wallets: this.organizerData.walletData })
+      res.send({ coordinators: this.organizerData.coordinatorInfo, wallets: this.organizerData.walletInfo })
     })
 
     app.get(`/auction-data`, async (_, res) => {
@@ -347,12 +368,15 @@ export class OrganizerApi {
       res.send(this.organizerData.layer1.proposeData.slice(-1 * limit))
     })
 
+    app.get(`/result`, async (_, res) => {
+      const result = this.createResult()
+      res.send(result)
+    })
+
     app.get(`/download-result`, async (_, res) => {
-      const allData = {
-        info: this.operationInfo,
-        organizerData: this.organizerData
-      }
-      fs.writeFileSync('resultData.json', JSON.stringify(allData)) // TODO: using uuid for fileame
+      this.updateWalletData()
+      const allData = this.createResult()
+      fs.writeFileSync('resultData.json', JSON.stringify(allData), 'utf8') // TODO: using uuid for fileame
       res.download('resultData.json')
     })
 
@@ -369,7 +393,7 @@ export class OrganizerApi {
       // The test wallet's address will be updated after first deposit
       if (data.role === 'wallet') {
         const registeredId = await this.registerLock.acquire('wallet', () => {
-          return this.registerWallet(data.params as WalletData) // only get id number before deposit to registration
+          return this.registerWallet(data.params as WalletInfo) // only get id number before deposit to registration
         })
         if (data.params?.id == registeredId) {
           res.send({ id: registeredId, message: "registered" })
@@ -380,7 +404,7 @@ export class OrganizerApi {
         const registeredId = await this.registerLock.acquire(
           'coordinator',
           () => {
-            return this.registerCoordinator(data.params as CoordinatorData) // only get id number before deposit to
+            return this.registerCoordinator(data.params as CoordinatorInfo) // only get id number before deposit to
           })
         res.send({ id: registeredId, message: "registered" })
       } else {
@@ -476,10 +500,6 @@ export class OrganizerApi {
     app.get('/txs-in-queues', async (_, res) => {
       const remainJobs = await this.organizerQueue.allRemainingJobs()
       res.status(200).send({ currentTxs: remainJobs })
-    })
-
-    app.get(`/wallet-jobs-info`, async (_, res) => {
-      res.send(this.getWalletJobInfo())
     })
 
     app.post('/select-rate', async (req, res) => {

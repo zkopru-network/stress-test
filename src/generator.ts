@@ -70,16 +70,16 @@ export class TransferGenerator extends ZkWalletAccount {
 
     this.queues = {
       mainQueue: new Queue('mainQueue', { connection: this.queueConnection }),
-      walletQueue: new Queue(`wallet${this.id}`, {
+      walletQueue: new Queue(`wallet_${this.id}`, {
         connection: this.queueConnection,
       }),
     }
   }
 
   async startWorker() {
-    logger.info(`stress-test/generator.ts - worker started as 'wallet${this.id}'`)
-    const worker = new Worker<ZkTxData,any,string>(
-      `wallet${this.id}`,
+    logger.info(`stress-test/generator.ts - worker started as 'wallet_${this.id}'`)
+    const worker = new Worker<ZkTxData, any, string>(
+      `wallet_${this.id}`,
       async (job: ZkTxJob) => {
         try {
           const { tx, zkTx } = job.data
@@ -88,7 +88,7 @@ export class TransferGenerator extends ZkWalletAccount {
             await this.unlockUtxos(tx.inflow)
             throw Error(await response.text())
           } else {
-            logger.info(`stress-test/generator.ts - sendLyaer2Tx response is 200`)
+            logger.info(`stress-test/generator.ts - zktx successfully sent`)
           }
         } catch (error) {
           logger.error(`stress-test/generator.ts -  error on worker process : ${error}`)
@@ -97,9 +97,9 @@ export class TransferGenerator extends ZkWalletAccount {
       { connection: this.queueConnection },
     )
 
-    worker.on('completed', (job: ZkTxJob) => {
+    worker.on('completed', async (job: ZkTxJob) => {
       logger.info(
-        `stress-test/generator.ts - job salt ${job.data.tx.inflow[0].salt.toNumber()} completed`,
+        `stress-test/generator.ts - job salt ${job.data.tx.inflow[0].salt} completed`,
       )
     })
 
@@ -228,7 +228,7 @@ export class TransferGenerator extends ZkWalletAccount {
         try {
           const zkTx = await this.shieldTx({ tx })
           this.usedUtxoSalt.add(sendableUtxo.salt.toNumber())
-          this.queues.mainQueue.add(`wallet${this.id}`, { tx, zkTx })
+          this.queues.mainQueue.add(`wallet_${this.id}`, { tx, zkTx })
         } catch (err) {
           logger.error(`stress-test/generator.ts - error while shielding then adding queue ${err}`)
         }

@@ -7,7 +7,7 @@ import { Block, FullNode } from '@zkopru/core'
 import { Coordinator } from '@zkopru/coordinator'
 import { logger } from '@zkopru/utils'
 import { config } from './config'
-import { ProposeData, CoordinatorData } from './types'
+import { ProposeData, CoordinatorInfo } from './types'
 import { getBase, startLogger } from './generator-utils'
 
 startLogger('COORDINATOR_LOG')
@@ -73,7 +73,7 @@ async function testCoodinator() {
         maxBytes: coordinatorConfig.maxBytes,
         priceMultiplier: coordinatorConfig.priceMultiplier,
         maxBid: coordinatorConfig.maxBid
-      } as CoordinatorData
+      } as CoordinatorInfo
     }),
   })
   if (registerResponse.status !== 200) {

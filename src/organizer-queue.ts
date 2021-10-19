@@ -103,12 +103,9 @@ export class OrganizerQueue {
       )
 
       subWorkers[queueName].on('completed', (job: Job) => {
-          // logger.info(`job worker.data object fee.toString: ${job.data.zkTx.fee.toNumber()}}`) // TODO : remove    
-          // logger.info(`Fp 10 ${Fp.from(10)} add it with fee ${Fp.from(10).add(Fp.from(job.data.zkTx.fee))}`)
-          const rateWorkerData = this.queueData[job.name]
-          const { txCount, spentFee } = rateWorkerData
-          this.queueData[job.name].txCount = txCount + 1 // TODO : go to rate worker  
-          this.queueData[job.name].spentFee = spentFee.add(Fp.from(job.data.zkTx.fee.toString()))
+        const { txCount, spentFee } = this.queueData[job.name]
+        this.queueData[job.name].txCount = txCount + 1 // TODO : go to rate worker  
+        this.queueData[job.name].spentFee = spentFee.add(Fp.from(job.data.zkTx.fee.toString()))
       })
 
       subScheduler[queueName] = new QueueScheduler(queueName, { connection })
