@@ -237,12 +237,13 @@ export class OrganizerApi {
   }
 
   createResult() {
+    this.updateWalletData()
     if (this.contractsReady == false) return {}
-    
+    try {
       const { performance, recentProposedBlocks } = processProposeData(this.organizerData)
-    const { recentAuctionData, coordinatorInfo } = processCoordinatorData(this.organizerData)
-    return {
-      info: this.organizerData.operationInfo,
+      const { recentAuctionData, coordinatorInfo } = processCoordinatorData(this.organizerData)
+      return {
+        info: this.organizerData.operationInfo,
       configuration: processConfigurationData(this.organizerData),
       testResult: {
         performance,
@@ -253,6 +254,10 @@ export class OrganizerApi {
         recentTxData: processTxData(this.organizerData)
       }
     }
+  } catch (error) {
+    logger.error(`stress-test/organizer-api.ts - createReulst error : ${error}`)
+    return {}
+  }
   }
 
   private async checkReady() {
@@ -377,7 +382,6 @@ export class OrganizerApi {
     })
 
     app.get(`/download-result`, async (_, res) => {
-      this.updateWalletData()
       const allData = this.createResult()
       fs.writeFileSync('resultData.json', JSON.stringify(allData), 'utf8') // TODO: using uuid for fileame
       res.download('resultData.json')
