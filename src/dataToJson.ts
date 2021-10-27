@@ -61,7 +61,7 @@ export function processProposeData(data) {
   }
 
   return {
-    Performance: {
+    performance: {
       firstProposeTime,
       lastProposeTime,
       txCount

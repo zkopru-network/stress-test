@@ -239,13 +239,13 @@ export class OrganizerApi {
   createResult() {
     if (this.contractsReady == false) return {}
     
-    const { Performance, recentProposedBlocks } = processProposeData(this.organizerData)
+      const { performance, recentProposedBlocks } = processProposeData(this.organizerData)
     const { recentAuctionData, coordinatorInfo } = processCoordinatorData(this.organizerData)
     return {
       info: this.organizerData.operationInfo,
       configuration: processConfigurationData(this.organizerData),
       testResult: {
-        Performance,
+        performance,
         recentProposedBlocks,
         recentAuctionData,
         coordinatorInfo,
