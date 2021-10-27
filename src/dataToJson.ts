@@ -1,4 +1,4 @@
-import BN from 'bn.js'
+import { Fp } from '@zkopru/babyjubjub'
 
 // TODO: refactor this funcs
 
@@ -14,8 +14,8 @@ export function processConfigurationData(data) {
   const { blockData } = data.layer1
   
   // Calculate average block gas limit
-  const sumGasLimit = blockData.reduce((sum: BN, data: blockStat) => sum.add(new BN(data.gasLimit)), new BN(0))
-  const avgBlockGasLimit = sumGasLimit.div(new BN(blockData.length)).toNumber()
+  const sumGasLimit = blockData.reduce((sum: Fp, data: blockStat) => sum.add(Fp.from(data.gasLimit)), Fp.from(0))
+  const avgBlockGasLimit = sumGasLimit.div(Fp.from(blockData.length)).toNumber()
   
   const layer1 = { chainId, nodeInfo, avgBlockGasLimit }
   
@@ -83,8 +83,8 @@ export function processCoordinatorData(data) {
       name: `coordinator_${coordinator.id}`,
       proposedCount: 0,
       totalTxCount: 0,
-      totalPaidFee: new BN(0),
-      totalSpentForBid: new BN(0)
+      totalPaidFee: Fp.from(0),
+      totalSpentForBid: Fp.from(0) 
     }
   })
 
@@ -94,8 +94,8 @@ export function processCoordinatorData(data) {
 
     coordinatorInfo[propose.from].proposedCount += 1
     coordinatorInfo[propose.from].totalTxCount += propose.txcount
-    coordinatorInfo[propose.from].totalPaidFee = totalPaidFee.add(new BN(parseInt(propose.paidFee)))
-    lastProposedNum = Math.max(lastProposedNum, propose.layer1BlockNumber)
+      coordinatorInfo[propose.from].totalPaidFee = totalPaidFee.add(Fp.from(propose.paidFee))
+      lastProposedNum = Math.max(lastProposedNum, propose.layer1BlockNumber)
   })
 
   /* caculating totalSpentForBid
@@ -110,16 +110,10 @@ export function processCoordinatorData(data) {
     if (highestBid.startBlock <= lastProposedNum) {
       const from = highestBid.bidder.toLowerCase()
       const { totalSpentForBid } = coordinatorInfo[from]
-      coordinatorInfo[from].totalSpentForBid = totalSpentForBid.add(new BN(parseInt(highestBid.bidAmount)))
+      coordinatorInfo[from].totalSpentForBid = totalSpentForBid.add(Fp.from(highestBid.bidAmount))
     }
 
-    // recentAuctionData.unshift({
-    //   proposeNum: roundNum, 
-    //   highestBidder: highestBid.bidder.toLowerCase(),
-    //   highestBidAmount: parseInt(highestBid.bidAmount),
-    //   totalBidCount: bidHistory.length
-    // })
-    recentAuctionData.unshift({ highestBid, totalBidCount: bidHistory.length })
+    recentAuctionData.unshift({ highestBid, roundNum, totalBidCount: bidHistory.length })
     recentAuctionData.length = 10
   })
 
@@ -132,13 +126,11 @@ export function processTxData(data) {
   const txHashes = txData.map(data => { return Object.keys(data)[0] })
 
   const lastZkopruTxIncluded: any[] = []
-  let pointer = blockData.length - 1
 
+  let pointer = blockData.length - 1
   while (lastZkopruTxIncluded.length < 10) {
     if (pointer == 0) break // No more found
-
     const block = blockData[pointer]
-
     let zkopruTxCount = 0
 
     for (const tx of block.transactions) {
@@ -146,10 +138,9 @@ export function processTxData(data) {
         zkopruTxCount += 1
       }
     }
-
     if (zkopruTxCount != 0) lastZkopruTxIncluded.push({ ...block, zkopruTxCount })
-
     pointer -= 1
   }
+
   return lastZkopruTxIncluded
 }
