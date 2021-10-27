@@ -21,6 +21,7 @@ export interface OperationInfo {
     startTime: number
     endTime: number
     checkTime?: number
+    targetTPS?: number
   }
   systemInformation?: {
     cpu: si.Systeminformation.CpuData,

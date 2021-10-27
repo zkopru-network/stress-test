@@ -208,6 +208,7 @@ export class OrganizerApi {
       operation: {
         startTime: Date.now(),
         endTime: 0,
+        targetTPS: this.organizerQueue.currentRate().targetTPS,
       },
       systemInformation: {
         cpu: cpuInfo,
