@@ -1,4 +1,3 @@
-// import fs from 'fs'
 import BN from 'bn.js'
 import fetch from 'node-fetch'
 import { toWei } from 'web3-utils'
@@ -9,7 +8,7 @@ import { UtxoStatus, Utxo } from '@zkopru/transaction'
 import { HDWallet } from '@zkopru/account'
 import { logger, sleep } from '@zkopru/utils'
 import { ZkWalletAccount, ZkWalletAccountConfig } from '@zkopru/zk-wizard'
-import { ZkTxData, ZkTxJob } from './organizer-queue'
+import { ZkTxData, ZkTxJob } from './organizer/queue'
 import { TestTxBuilder } from './testbuilder'
 import { logAll, getZkTx } from './generator-utils'
 import { config } from './config'
@@ -158,8 +157,6 @@ export class TransferGenerator extends ZkWalletAccount {
     this.startWorker()
 
     while (this.isActive) {
-      // TODO: how to recognize target queue is changed?
-      // get TPS from organizer... or get sum of all tx in wait active delayes...
       const response = await fetch(`${organizerUrl}/txs-in-queues`, {
         method: 'get',
       })

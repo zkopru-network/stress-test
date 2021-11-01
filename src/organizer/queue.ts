@@ -1,6 +1,7 @@
 import { Job, Queue, QueueScheduler, Worker } from 'bullmq'
 import { RawTx, ZkTx } from '@zkopru/transaction'
 import { Fp } from '@zkopru/babyjubjub'
+import { OrganizerConfig } from './context'
 
 /*
 Organizer Queue has two types of queue, 'main' and 'sub'.
@@ -47,17 +48,6 @@ interface Schedulers {
   sub: { [key: string]: QueueScheduler }
 }
 
-interface QueueRate {
-  name?: string
-  max: number
-  duration?: number
-}
-
-export interface OrganizerQueueConfig {
-  connection: { host: string; port: number }
-  rates: QueueRate[]
-}
-
 export class OrganizerQueue {
   private currentQueue: string // currentRate
 
@@ -67,7 +57,7 @@ export class OrganizerQueue {
 
   scheduler: Schedulers
 
-  config: OrganizerQueueConfig
+  config: OrganizerConfig
 
   queueData: {
     [walletName: string]:
@@ -77,14 +67,14 @@ export class OrganizerQueue {
     }
   }
 
-  constructor(config: OrganizerQueueConfig) {
+  constructor(config: OrganizerConfig) {
     this.config = config
 
     const subQueues = {}
     const subWorkers = {}
     const subScheduler = {}
 
-    const { connection } = config
+    const { redis: connection } = config.node
 
     for (const rate of config.rates) {
       const queueName = rate.name ?? rate.max.toString()
@@ -162,7 +152,7 @@ export class OrganizerQueue {
 
   addWalletQueue(walletName: string) {
     this.queues.wallet[walletName] = new Queue(walletName, {
-      connection: this.config.connection,
+      connection: this.config.node.redis,
     })
     this.queueData[walletName] = {
       txCount: 0,

@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import fs from 'fs'
 import util from 'util'
 import Web3 from 'web3'

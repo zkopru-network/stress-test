@@ -6,7 +6,7 @@ import { logger, sleep } from '@zkopru/utils'
 import { TransferGenerator } from './generator'
 import { getBase, startLogger } from './generator-utils'
 import { config } from './config'
-import { WalletInfo } from './types'
+import { WalletInfo } from './organizer/types'
 
 startLogger(`./WALLET_LOG`)
 

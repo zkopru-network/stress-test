@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import dns from 'dns'
 import fetch from 'node-fetch'
 import { TransactionReceipt } from 'web3-core'
@@ -7,7 +6,7 @@ import { Block, FullNode } from '@zkopru/core'
 import { Coordinator } from '@zkopru/coordinator'
 import { logger } from '@zkopru/utils'
 import { config } from './config'
-import { ProposeData, CoordinatorInfo } from './types'
+import { ProposeData, CoordinatorInfo } from './organizer/types'
 import { getBase, startLogger } from './generator-utils'
 
 startLogger('COORDINATOR_LOG')

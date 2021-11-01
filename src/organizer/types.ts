@@ -1,16 +1,5 @@
-import Web3 from 'web3'
 import { Fp } from '@zkopru/babyjubjub'
 import  si from 'systeminformation'
-import { OrganizerQueueConfig } from './organizer-queue'
-
-// Generator types
-
-// Organizer API types
-interface GasData {
-  from: string
-  inputSize: number
-  gasUsed?: number
-}
 
 export interface OperationInfo {
   testnetInfo?: {
@@ -53,16 +42,6 @@ export interface CoordinatorInfo {
   maxBid: number
 }
 
-export interface OrganizerConfig extends OrganizerQueueConfig {
-  dev?: boolean
-  organizerPort?: number
-}
-
-export interface OrganizerContext {
-  web3: Web3
-  coordinators: CoordinatorInfo[]
-}
-
 export type RegisterData = 
 | { role : 'wallet', params: WalletInfo }
 | { role : 'coordinator', params: CoordinatorInfo } 
@@ -101,27 +80,5 @@ export interface ProposeData {
   from?: string
   layer1TxHash?: string
   layer1BlockNumber?: number
-  finalized?: boolean // TODO: add feature to update from finzlizer
-}
-
-type zkopruConfig = {
-    maxBlockSize?: number,
-    maxValidationGas?: number,
-    challengePeriod?: number,
-    minimumStake?: number,
-    maxUtxoDepth?: number,
-}
-
-export interface OrganizerData {
-  operationInfo: OperationInfo
-  coordinatorInfo: CoordinatorInfo[]
-  walletInfo: WalletInfo[]
-  layer1: {
-    blockData: any
-    txData: TxData[]
-    auctionData: AuctionData
-    zkopruConfig: zkopruConfig
-    proposeData: ProposeData[]
-    gasTable: { [sig: string]: GasData[] }
-  }
+  finalized?: boolean // TODO: add a feature to update this 
 }
