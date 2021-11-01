@@ -95,7 +95,7 @@ class OrganizerApi {
     app.get(`/download-result`, async (_, res) => {
       const result = this.createResultData()
       // TODO: use uuid create result filename 
-      fs.writeFileSync('resultData.json', JSON.stringify(result), 'utf8') // TODO: using uuid for fileame
+      fs.writeFileSync('resultData.json', JSON.stringify(result), 'utf8')
       res.download('resultData.json')
     })
 
@@ -107,7 +107,7 @@ class OrganizerApi {
         logger.trace(`stress-test/organizer/api.ts - register received data ${logAll(data)}`)
       } catch (err) {
         logger.error(`stress-test/organizer/api.ts - register error ${err}`)
-        // TODO : res send error
+        res.status(500).send(`register error - debug organizer/api log`)
         return
       }
 

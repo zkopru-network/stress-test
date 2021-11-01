@@ -16,19 +16,23 @@ startLogger(`./BLOCKTURNNER_LOG`)
 
 // Block Turner is for Zkopru layer 2 chain being continue by deposit tx with enough fee
 async function runBlockTurner() {
-  // TODO : refactor waiting trigger as deposit event listen
+  // This function will start after all wallet node are deposited for testing
+  // It is more explicit thatn checking deposit interval
   let ready = false
   logger.info(`stress-test/blockturner.ts - standby for all wallets are registered to organizer`)
   while (!ready) {
     try {
+      // organizer has wallet node info
       const registerResponse = await fetch(`${organizerUrl}/registered-node-info`, {
         method: 'get',
       })
+      
       const walletData = await registerResponse.json()
       const walletStatus = walletData.map(wallet => {
         return wallet.from !== ''
       })
 
+      // If all wallet node done deposit process, then will get the walletStatus has only `true`
       if (!walletStatus.includes(false)) {
         ready = true
       }
@@ -72,7 +76,7 @@ async function runBlockTurner() {
   turner.node.start()
   turner.setAccount(walletAccount)
 
-  // let stagedDeposits
+  // recursivly check 15 block periods
   let depositTimer
   function depositLater() {
     depositTimer = setTimeout(async () => {

@@ -39,10 +39,10 @@ export class Organizer {
     const targetMeta = ['stress-test', 'zkopru']
     let gitData = {}
 
-    // TODO: set header file path 
     targetMeta.forEach(repo => {
       let branch: string
       let commit: string
+      // headFile path is fixed dockerfile
       const headFile = (`metadata/${repo}/HEAD`)
 
       if (fs.existsSync(headFile)) {

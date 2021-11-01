@@ -18,6 +18,8 @@ import { HDWallet, ZkAccount } from '@zkopru/account'
 import { logStream } from '@zkopru/utils'
 import { SQLiteConnector, schema } from '@zkopru/database/dist/node'
 import { ZkWallet } from '~zk-wizard/zk-wallet'
+import { PayableTransactionObject } from '~contracts/contracts/types'
+import { IUserInteractable } from '~contracts/contracts/IUserInteractable'
 
 // helper functions
 export async function getBase(url: string, mnemonic: string, password: string) {
@@ -47,9 +49,8 @@ export async function getBase(url: string, mnemonic: string, password: string) {
 }
 
 export async function getDepositTx(wallet, note: Note, fee: F) {
-  // TODO: set Type
-  const { deposit } = wallet.node.layer1.user.methods
-  const tx = deposit(
+  const { methods } = wallet.node.layer1.user as IUserInteractable
+  const tx = methods.deposit(
     note.owner.spendingPubKey().toString(),
     note.salt.toUint256().toString(),
     note
@@ -70,7 +71,7 @@ export async function getDepositTx(wallet, note: Note, fee: F) {
       .toString(),
     fee.toString(),
   )
-  return tx
+  return tx as PayableTransactionObject<void>
 }
 
 export function logAll(Object) {
@@ -96,7 +97,7 @@ export function startLogger(fileName: string) {
   logStream.addStream(prettyStream)
 }
 
-// TODO: get fency current Coodinator Ip
+// TODO: refactor get current Coodinator Ip
 export function getLocalIP() {
   const nets = networkInterfaces()
   const net = nets.eth0
