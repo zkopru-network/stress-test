@@ -86,7 +86,6 @@ export class Organizer {
 
       logger.info(`stress-test/organizer.ts - Waiting zkopru contracts are ready`)
       while (this.context.contractsReady !== true) {
-        logger.info(`contractReady not yet`)
         await sleep(5000)
       }
       this.context.contractsReady = true

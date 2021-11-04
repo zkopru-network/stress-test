@@ -26,18 +26,22 @@ class OrganizerApi {
     const walletKeys = Object.keys(queueData)
 
     const result = this.context.organizerData.updatedResult()
-
+    
     // update data to walletinfo on `organizerData`
-    walletKeys.forEach(wallet => {
-      const walletId = parseInt(wallet.split("_")[1])
-
-      result.testResult!.walletInfo
+    try {      
+      walletKeys.forEach(wallet => {
+        const walletId = parseInt(wallet.split("_")[1])
+        
+        result.testResult!.walletInfo
         .filter(data => data.id == walletId)
         .map(data => {
           data.generatedTx = queueData[wallet].txCount
           data.totalSpentFee = queueData[wallet].spentFee.toString()
         })
-    })
+      })
+    } catch(error) {
+      logger.warn(`stress-test/organizer/api.ts - wallet info may not updated yet, try later: ${error}`)
+    }
 
     // generate report data for testing result
     return result
@@ -46,7 +50,6 @@ class OrganizerApi {
   start = () => {
     const app = express()
     const { organizerData, organizerQueue } = this.context
-    // logger.info(`stress-test/organizer/api.ts - context 'contractsReady' is ${contractsReady}`)
     app.use(express.text())
 
     app.get(`/ready`, async (_, res) => {
@@ -107,7 +110,7 @@ class OrganizerApi {
 
       try {
         data = JSON.parse(req.body) as RegisterData
-        logger.info(`stress-test/organizer/api.ts - register received data ${logAll(data)}`)
+        logger.trace(`stress-test/organizer/api.ts - register received data ${logAll(data)}`)
       } catch (err) {
         logger.error(`stress-test/organizer/api.ts - register error ${err}`)
         res.status(500).send(`register error - debug organizer/api log`)
@@ -206,7 +209,7 @@ class OrganizerApi {
         const rateNames = this.context.organizerQueue.config.rates.map(rate => {
           return rate.name
         })
-        logger.info(`stress-test/organizer/api.ts - selectable rates ${logAll(rateNames)}`)
+        logger.info(`stress-test/organizer/api.ts - selectable rates: ${logAll(rateNames)}`)
 
         if (!rateNames.includes(selectRate)) {
           res.status(406).send(`only selectable rates are ${logAll(rateNames)}`)
@@ -239,7 +242,6 @@ class OrganizerApi {
       }
     })
   }
-
 }
 
 export default OrganizerApi

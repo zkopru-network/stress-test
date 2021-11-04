@@ -386,7 +386,6 @@ export class OrganizerData {
     while (true) {
       const contractCode = await this.web3.eth.getCode(config.auctionContract)
       if (contractCode.length > 10000) {
-        logger.info(`stress-test/organizer/data.ts - check Ready True!`)
         break
       } else {
         await sleep(1000)
