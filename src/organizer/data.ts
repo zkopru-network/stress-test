@@ -95,7 +95,7 @@ export class OrganizerData {
   }
 
 
-  registerCoordinator(updatedData: CoordinatorInfo) {
+  registerCoordinator = (updatedData: CoordinatorInfo) => {
     this.registerLock.acquire(
       'coordinator', () => {
         try {
@@ -122,8 +122,8 @@ export class OrganizerData {
       })
   }
 
-  registerWallet(updatedData: WalletInfo) {
-    this.registerLock.acquire('wallet', () => {
+  registerWallet = async (updatedData: WalletInfo) => {
+    return await this.registerLock.acquire('wallet', () => {
       try {
         let walletId: number
         const walletData = this.walletInfo
@@ -137,9 +137,9 @@ export class OrganizerData {
             }
           })
         } else {
-          logger.info(`stress-test/organizer/data.ts - not found walletId, count registered wallets then use it id and update`)
           walletId = walletData.length + 1
           this.walletInfo.push({ id: walletId, ...updatedData })
+          logger.info(`stress-test/organizer/data.ts - not found walletId, updated ${walletId} for registering wallet`)
         }
         return walletId
       } catch (error) {
@@ -150,7 +150,7 @@ export class OrganizerData {
   }
 
   // onChainData process helper functions
-  updateAuctionData() {
+  updateAuctionData = () => {
     this.auction.events.NewHighBid().on(`data`, async (data) => {
       const { calcRoundStart } = this.auction.methods
       const { roundIndex, bidder, amount } = data.returnValues
@@ -182,7 +182,7 @@ export class OrganizerData {
     })
   }
 
-  async getContractInfo() {
+  getContractInfo = async () => {
     this.onChainData.zkopruConfig = {
       maxBlockSize: await this.zkopru.methods.MAX_BLOCK_SIZE().call(),
       maxValidationGas: await this.zkopru.methods.MAX_VALIDATION_GAS().call(),
@@ -192,11 +192,11 @@ export class OrganizerData {
     }
   }
 
-  async setOperationInfo(gitData: any, hostInfo: any, targetTPS: number) {
+  setOperationInfo = async (gitData: any, hostInfo: any, targetTPS: number) => {
     this.operationInfo = {
       testnetInfo: {
         nodeInfo: await this.web3.eth.getNodeInfo(),
-        chainId: await this.web3.eth.getChainId(),
+        chainId: await this.web3.eth.getChainId()
       },
       operation: {
         startTime: Date.now(),
@@ -216,26 +216,15 @@ export class OrganizerData {
   */
 
   // Configuration
-  static processConfigurationData(data) {
-    const { chainId, nodeInfo } = data.operationInfo.testnetInfo
-    const { blockData } = data.layer1
-
-    // Calculate average block gas limit
+  static calcAvgBlockGasLimit(blockData: BlockData[]) {
     const sumGasLimit = blockData.reduce((sum: Fp, data: blockStat) => sum.add(Fp.from(data.gasLimit)), Fp.from(0))
-    const avgBlockGasLimit = sumGasLimit.div(Fp.from(blockData.length)).toNumber()
 
-    const layer1 = { chainId, nodeInfo, avgBlockGasLimit }
-
-    return {
-      layer1,
-      zkopruConfig: data.layer1.zkopruConfig,
-      coordinatorConfig: data.coordinatorInfo
-    }
+    return sumGasLimit.div(Fp.from(blockData.length)).toNumber()
   }
 
   // calculating TPS on layer2 blocks, proposals.
-  static processProposeData(data, limit?: number) {
-    const { proposeData } = data.layer1
+  static processProposeData(data: OnChainData, limit?: number) {
+    const { proposeData } = data
     let firstProposeTime = 0
 
     const txCount = {
@@ -280,9 +269,9 @@ export class OrganizerData {
   }
 
   // Coordinator
-  static processCoordinatorData(data) {
-    const { coordinatorInfo: coordinatorData } = data
-    const { proposeData, auctionData } = data.layer1
+  static processCoordinatorData(coordinatorData, data: OnChainData) {
+    // const { coordinatorInfo: coordinatorData } = data
+    const { proposeData, auctionData } = data
 
     let lastProposedNum = 0
     const coordinatorInfo = {}
@@ -299,12 +288,13 @@ export class OrganizerData {
 
     // accumulated from propose data
     proposeData.forEach(propose => {
-      const { totalPaidFee } = coordinatorInfo[propose.from]
+      const proposer = propose.from!
+      const { totalPaidFee } = coordinatorInfo[proposer]
       try {
-        coordinatorInfo[propose.from].proposedCount += 1
-        coordinatorInfo[propose.from].totalTxCount += propose.txcount
-        coordinatorInfo[propose.from].totalPaidFee = totalPaidFee.add(Fp.from(propose.paidFee))
-        lastProposedNum = Math.max(lastProposedNum, propose.layer1BlockNumber)
+        coordinatorInfo[proposer].proposedCount += 1
+        coordinatorInfo[proposer].totalTxCount += propose.txcount
+        coordinatorInfo[proposer].totalPaidFee = totalPaidFee.add(Fp.from(propose.paidFee))
+        lastProposedNum = Math.max(lastProposedNum, propose.layer1BlockNumber!)
       } catch (error) {
         throw Error(`processing Error - ${error}, propose.paidFee ${propose.paidFee}`)
       }
@@ -331,8 +321,8 @@ export class OrganizerData {
   }
 
   // Extract tx data which related zkopru testing account from layer 1 Block data
-  static processTxData(data) {
-    const { txData, blockData } = data.layer1
+  static processTxData(data: OnChainData) {
+    const { txData, blockData } = data
     // 
     const txHashes = txData.map(data => { return Object.keys(data)[0] })
 
@@ -356,13 +346,22 @@ export class OrganizerData {
     return lastZkopruTxIncluded
   }
 
-  updatedResult() {
+  updatedResult = () => {
     try {
       const { performance, recentProposedBlocks } = OrganizerData.processProposeData(this.onChainData)
-      const { recentAuctionData, coordinatorInfo } = OrganizerData.processCoordinatorData(this.onChainData)
+      const { recentAuctionData, coordinatorInfo } = OrganizerData.processCoordinatorData(this.coordinatorInfo, this.onChainData)
       return {
         info: this.operationInfo,
-        configuration: OrganizerData.processConfigurationData(this.onChainData),
+        configuration: {
+          layer1: {
+            chainId: this.operationInfo?.testnetInfo!.chainId,
+            nodeInfo: this.operationInfo?.testnetInfo!.nodeInfo,
+            avgBlockGasLimit: OrganizerData.calcAvgBlockGasLimit(this.onChainData.blockData)
+          },
+          zkopruConfig: this.onChainData.zkopruConfig,
+          coordinatorConfig: this.coordinatorInfo
+
+        },
         testResult: {
           performance,
           recentProposedBlocks,
@@ -382,28 +381,22 @@ export class OrganizerData {
    * End of section of the methods, generating the data of testing result.
    */
 
-  async checkReady(): Promise<any> {
+  checkReady = async (): Promise<any> => {
     // Wait for deploy contract
     while (true) {
       const contractCode = await this.web3.eth.getCode(config.auctionContract)
       if (contractCode.length > 10000) {
+        logger.info(`stress-test/organizer/data.ts - check Ready True!`)
         break
       } else {
         await sleep(1000)
       }
     }
-
-    return this.web3.eth.subscribe('newBlockHeaders').on('data', async () => {
-      const activeCoordinator = await this.auction.methods
-        .activeCoordinator()
-        .call()
-      if (+activeCoordinator) {
-        await this.getContractInfo()
-      }
-    })
+    
+    return this.web3.eth.subscribe('newBlockHeaders')
   }
 
-  async watchLayer1() {
+  watchLayer1 = async () => {
     const { blockData: blockStats, txData, gasTable } = this.onChainData // Initialized by constructor
 
     const watchTargetContracts = [config.zkopruContract, config.auctionContract]

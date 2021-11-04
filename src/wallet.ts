@@ -1,10 +1,8 @@
-/* eslint-disable no-case-declarations */
 import fetch from 'node-fetch'
-
 import { FullNode } from '@zkopru/core'
 import { logger, sleep } from '@zkopru/utils'
 import { TransferGenerator } from './generator'
-import { getBase, startLogger } from './generator-utils'
+import { getBase, startLogger, logAll } from './generator-utils'
 import { config } from './config'
 import { WalletInfo } from './organizer/types'
 
@@ -26,12 +24,13 @@ async function runGenerator() {
     }),
   })
   const registered = await registerResponse.json()
+  logger.info(`registered number ${logAll(registered)}`)
 
   logger.info(`stress-test/wallet.ts - wallet selected account index ${registered.id + 3}`)
 
   // Wait deposit sequence
   let ready = false
-  logger.info(`stress-test/wallet.ts - standby for 'can-deposit' are ready`)
+  logger.info(`stress-test/wallet.ts - stand by for 'can-deposit' are ready`)
   while (!ready) {
     try {
       const readyResponse = await fetch(`${organizerUrl}/can-deposit`, {
@@ -41,11 +40,13 @@ async function runGenerator() {
         }),
       })
       ready = await readyResponse.json()
+      logger.info(`wallet received ready data ${ready}`)
     } catch (error) {
       logger.error(`stress-test/wallet.ts - error on checking organizer ready: ${error}`)
     }
     await sleep(5000)
   }
+  logger.info(`ready!`)
 
   const { hdWallet, mockupDB, webSocketProvider } = await getBase(
     config.testnetUrl,
@@ -55,8 +56,8 @@ async function runGenerator() {
   const walletAccount = await hdWallet.createAccount(+registered.id + 3)
 
   const walletNode: FullNode = await FullNode.new({
-    provider: webSocketProvider,
     address: config.zkopruContract, // Zkopru contract
+    provider: webSocketProvider,
     db: mockupDB,
     accounts: [walletAccount],
   })

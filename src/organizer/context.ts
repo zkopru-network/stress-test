@@ -20,7 +20,7 @@ export interface OrganizerConfig  {
 
 export interface OrganizerContext {
   contractsReady: boolean
-  
+
   organizerData: OrganizerData
   
   organizerQueue: OrganizerQueue

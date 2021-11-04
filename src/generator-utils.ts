@@ -17,9 +17,7 @@ import {
 import { HDWallet, ZkAccount } from '@zkopru/account'
 import { logStream } from '@zkopru/utils'
 import { SQLiteConnector, schema } from '@zkopru/database/dist/node'
-import { ZkWallet } from '~zk-wizard/zk-wallet'
-import { PayableTransactionObject } from '~contracts/contracts/types'
-import { IUserInteractable } from '~contracts/contracts/IUserInteractable'
+import { ZkWallet } from '@zkopru/zk-wizard'
 
 // helper functions
 export async function getBase(url: string, mnemonic: string, password: string) {
@@ -49,8 +47,8 @@ export async function getBase(url: string, mnemonic: string, password: string) {
 }
 
 export async function getDepositTx(wallet, note: Note, fee: F) {
-  const { methods } = wallet.node.layer1.user as IUserInteractable
-  const tx = methods.deposit(
+  const { deposit } = wallet.node.layer1.user.methods
+  const tx = deposit(
     note.owner.spendingPubKey().toString(),
     note.salt.toUint256().toString(),
     note
@@ -71,7 +69,7 @@ export async function getDepositTx(wallet, note: Note, fee: F) {
       .toString(),
     fee.toString(),
   )
-  return tx as PayableTransactionObject<void>
+  return tx
 }
 
 export function logAll(Object) {

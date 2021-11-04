@@ -32,6 +32,7 @@ async function testCoodinator() {
     'helloworld',
   )
 
+  // TODO: more than one coordinator
   const coordinatorAccount = await hdWallet.createAccount(0)
   const slaherAccount = await hdWallet.createAccount(1)
 

@@ -38,4 +38,4 @@ const organizerConfig: OrganizerConfig = {
 
 const organizer = new Organizer(organizerConfig)
 organizer.start()
-logger.info('stress-test/organizer/indext.ts - organizer started')
+logger.info('stress-test/organizer/index.ts - organizer started')

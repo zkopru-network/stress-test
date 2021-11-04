@@ -10,27 +10,24 @@ import OrganizerApi from './api'
 export class Organizer {
   config: OrganizerConfig
 
-  contractsReady: boolean
-
   context: OrganizerContext
 
   organizerApi: OrganizerApi
 
   constructor(organizerConfig: OrganizerConfig) {
     this.config = organizerConfig
-    this.contractsReady = false
 
     this.context = {
-      contractsReady: this.contractsReady,
+      contractsReady: false,
+      organizerQueue: new OrganizerQueue(organizerConfig),
       organizerData: new OrganizerData(organizerConfig),
-      organizerQueue: new OrganizerQueue(organizerConfig)
     }
 
     this.organizerApi = new OrganizerApi(this.context, organizerConfig)
   }
 
   // get data from `organizerQueue` than update `organizerData` when start function initiate
-  async updateOperationInfo() {
+  updateOperationInfo = async () => {
     // host systeminformation
     const cpuInfo = await si.cpu()
     const memInfo = await si.mem()
@@ -65,33 +62,38 @@ export class Organizer {
     setOperationInfo(gitData, { cpuInfo, memInfo }, targetTPS)
   }
 
-
-  private async checkReady() {
-    // waiting at least one coordinator activate
-    const result = await this.context.organizerData.checkReady()
-    this.contractsReady = true;
-    return result
-  }
-
-  async start() {
+  start = async () => {
     this.updateOperationInfo()
     this.organizerApi.start()
 
     // for development
     if (this.config.dev) {
-      this.contractsReady = true
-      logger.info(`stress-test/organizer.ts - zkopru contract are ready`)
+      this.context.contractsReady = true
+      logger.info(`stress-test/organizer.ts - zkoprucontract are ready as dev mode`)
     } else {
-      const readySubscribtion = await this.checkReady()
+      const readySubscribtion = await this.context.organizerData.checkReady()
+      logger.info(`stress-test/organizer.ts - got checkReady from context`)
+      readySubscribtion.on('data', async () => {
+        const activeCoordinator = await this.context.organizerData.auction.methods
+          .activeCoordinator()
+          .call()
+        if (+activeCoordinator) {
+          logger.info(`activeCoordinator is ${activeCoordinator}`)
+          this.context.contractsReady = true
+          this.context.organizerData.getContractInfo()
+        }
+      })
 
       logger.info(`stress-test/organizer.ts - Waiting zkopru contracts are ready`)
-      while (this.contractsReady === false) {
+      while (this.context.contractsReady !== true) {
+        logger.info(`contractReady not yet`)
         await sleep(5000)
       }
+      this.context.contractsReady = true
 
       await readySubscribtion.unsubscribe((error, success) => {
         if (success) {
-          logger.info('stress-test/organizer.ts - successfully unsubscribe "ready", run block watcher')
+          logger.info('stress-test/organizer.ts - successfully unsubscribe for  "ready", run block watcher')
         }
         if (error) {
           logger.error(`stress-test/organizer.ts - failed to unsubscribe "ready": ${error} `)
@@ -103,8 +105,7 @@ export class Organizer {
     }
   }
 
-  async stop() {
-    this.organizerApi.stop()
-
+  stop = async () => {
+    await this.organizerApi.stop()
   }
 }

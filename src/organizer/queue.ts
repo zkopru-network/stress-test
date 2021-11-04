@@ -130,7 +130,7 @@ export class OrganizerQueue {
     }
   }
 
-  currentRate() {
+  currentRate = () => {
     const { limiter } = this.workers.sub[this.currentQueue].opts
     return {
       queueName: this.currentQueue,
@@ -140,7 +140,7 @@ export class OrganizerQueue {
     }
   }
 
-  selectRate(queue: string | number) {
+  selectRate = (queue: string | number) => {
     const queueName = queue.toString()
     if (!Object.keys(this.queues.sub).includes(queueName)) {
       return new Error(`There are not exist the queueName ${queueName}`)
@@ -150,7 +150,7 @@ export class OrganizerQueue {
     return { previous: previousQueue, current: this.currentQueue }
   }
 
-  addWalletQueue(walletName: string) {
+  addWalletQueue = (walletName: string) => {
     this.queues.wallet[walletName] = new Queue(walletName, {
       connection: this.config.node.redis,
     })
@@ -161,7 +161,7 @@ export class OrganizerQueue {
     return Object.keys(this.queues.wallet)
   }
 
-  async jobsInQueue(queueName: string) {
+  jobsInQueue = async (queueName: string) => {
     const jobCount = await this.queues.sub[queueName].getJobCounts(
       'wait',
       'active',
@@ -170,7 +170,7 @@ export class OrganizerQueue {
     return jobCount.wait + jobCount.active + jobCount.delayed
   }
 
-  async allRemainingJobs() {
+  allRemainingJobs = async () => {
     let remainJobs = 0
     for (const queueName of Object.keys(this.queues.sub)) {
       remainJobs += await this.jobsInQueue(queueName)

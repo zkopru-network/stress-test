@@ -20,16 +20,18 @@ class OrganizerApi {
     this.config = organizerConfig
   }
 
-  createResultData() {
+  createResultData = (): any => {
     // get current `tx` and `fee` data from subQueue of wallets
-    const { queueData } = this.context.organizerQueue 
+    const { queueData } = this.context.organizerQueue
     const walletKeys = Object.keys(queueData)
+
+    const result = this.context.organizerData.updatedResult()
 
     // update data to walletinfo on `organizerData`
     walletKeys.forEach(wallet => {
       const walletId = parseInt(wallet.split("_")[1])
 
-      this.context.organizerData.walletInfo
+      result.testResult!.walletInfo
         .filter(data => data.id == walletId)
         .map(data => {
           data.generatedTx = queueData[wallet].txCount
@@ -38,16 +40,17 @@ class OrganizerApi {
     })
 
     // generate report data for testing result
-    return this.context.organizerData.updatedResult()
-  } 
+    return result
+  }
 
-  async start() {
+  start = () => {
     const app = express()
-    const { contractsReady, organizerData, organizerQueue } = this.context
+    const { organizerData, organizerQueue } = this.context
+    // logger.info(`stress-test/organizer/api.ts - context 'contractsReady' is ${contractsReady}`)
     app.use(express.text())
 
     app.get(`/ready`, async (_, res) => {
-      res.send(contractsReady)
+      res.send(this.context.contractsReady)
     })
 
     app.get(`/info`, async (_, res) => {
@@ -104,7 +107,7 @@ class OrganizerApi {
 
       try {
         data = JSON.parse(req.body) as RegisterData
-        logger.trace(`stress-test/organizer/api.ts - register received data ${logAll(data)}`)
+        logger.info(`stress-test/organizer/api.ts - register received data ${logAll(data)}`)
       } catch (err) {
         logger.error(`stress-test/organizer/api.ts - register error ${err}`)
         res.status(500).send(`register error - debug organizer/api log`)
@@ -112,30 +115,27 @@ class OrganizerApi {
       }
 
       if (data.role === 'wallet') {
-        const registeredId = this.context.organizerData.registerWallet(data.params)
+        const registeredId = await this.context.organizerData.registerWallet(data.params)
         this.context.organizerQueue.addWalletQueue(`wallet_${registeredId}`)
 
         if (data.params?.id == registeredId) {
-          res.send({ id: registeredId, message: "registered" })
+          res.send({ id: registeredId, message: "wallet registered" })
         } else {
           res.send({ id: registeredId, message: "waiting deposit for registeration" })
         }
       } else if (data.role === 'coordinator') {
-        const registeredId = this.context.organizerData.registerCoordinator(data.params)
-        res.send({ id: registeredId, message: "registered" })
+        const registeredId = await this.context.organizerData.registerCoordinator(data.params)
+        res.send({ id: registeredId, message: "coordinator registered" })
       } else {
         res.status(400).send(`Only 'wallet' or 'coordinator' allows for role`)
       }
     })
 
     app.post('/can-deposit', async (req, res) => {
-      if (contractsReady) {
-        res.send(false)
-        return
-      }
-
       const data = JSON.parse(req.body)
-      if (this.context.organizerData.lastDepositerID + 1 === +data.id) {
+      const { lastDepositerID } = this.context.organizerData
+      const isRequesterTurn = lastDepositerID + 1 === +data.id
+      if (this.context.contractsReady && isRequesterTurn) {
         res.send(true)
       } else {
         res.send(false)
@@ -230,7 +230,7 @@ class OrganizerApi {
     })
   }
 
-  async stop(): Promise<void> {
+  stop = (): Promise<void> => {
     return new Promise(res => {
       if (this.server) {
         this.server.close(() => res())
