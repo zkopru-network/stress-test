@@ -44,7 +44,7 @@ services:
       - 'coordinator'
     labels:
       kompose.service.expose: organizer
-    command: bash -c "node /generator/dist/organizer.js"
+    command: bash -c "node /generator/dist/organizer/index.js"
   wallet:
     image: zkopru_node
     build:

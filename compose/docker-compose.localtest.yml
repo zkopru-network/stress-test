@@ -33,7 +33,7 @@ services:
     depends_on:
       - 'redis'
       - 'coordinator'
-    command: bash -c "sleep 10 && node /generator/dist/organizer.js"
+    command: bash -c "sleep 10 && node /generator/dist/organizer/index.js"
   wallet:
     image: zkopru_node
     build:
