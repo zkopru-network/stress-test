@@ -58,6 +58,7 @@ COPY zkopru/packages/transaction/dist /generator/zkopru/packages/transaction/dis
 COPY zkopru/packages/tree/dist /generator/zkopru/packages/tree/dist
 COPY zkopru/packages/utils/dist /generator/zkopru/packages/utils/dist
 COPY zkopru/packages/zk-wizard/dist /generator/zkopru/packages/zk-wizard/dist
+RUN mkdir /generator/scripts && echo "" > /generator/scripts/copyFiles.js
 #RUN lerna clean -y --loglevel silent && lerna bootstrap
 
 RUN yarn install

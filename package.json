@@ -1,37 +1,30 @@
 {
-  "name": "@zkopru/generator",
+  "name": "zkopru-stress-test",
   "version": "1.0.0-beta.2",
   "license": "GPL-3.0-or-later",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "_moduleAliases": {
     "~zk-wizard": "./zkopru/packages/zk-wizard/dist"
   },
-  "bin": {
-    "zkopru-wallet": "dist/wallet.js",
-    "zkopru-coordinator": "dist/coordinator.js"
-  },
   "keywords": [
     "generator"
   ],
   "preferGlobal": true,
   "scripts": {
-    "prebuild": "shx mkdir -p dist",
+    "setup": "bash scripts/setup.sh",
+    "preinstall": "yarn setup && node scripts/copyFiles.js",
     "postinstall": "yarn link-modules",
+    "prebuild": "shx mkdir -p dist",
     "build": "tsc --build tsconfig.build.json",
-    "clean": "tsc --build tsconfig.build.json --clean && shx rm -rf coverage *.log junit.xml dist && jest --clearCache",
+    "clean": "tsc --build tsconfig.build.json --clean && shx rm -rf coverage *.log dist && jest --clearCache",
     "link-modules": "link-module-alias",
     "test": "jest",
     "test:unit": "jest test/unit",
     "test:watch": "jest --watch",
     "test:ci": "jest --coverage --ci --reporters='jest-junit'",
-    "coverage": "jest --coverage",
-    "coverage:show": "live-server coverage",
-    "dev:coordinator": "ts-node src/coordiantor.ts --config coordinator.dev.json",
-    "dev:wallet": "ts-node src/wallet.ts --config wallet.dev.json"
+    "coverage": "jest --coverage"
   },
   "dependencies": {
     "@zkopru/account": "file:./zkopru/packages/account",
@@ -75,6 +68,7 @@
     "jest": "^24.7.1",
     "link-module-alias": "^1.2.0",
     "shx": "^0.3.3",
+    "ts-jest": "^27.0.5",
     "tsconfig-paths": "^3.10.1",
     "typescript": "^3.8.3"
   }
