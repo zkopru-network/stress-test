@@ -44,7 +44,7 @@ services:
       - 'coordinator'
     labels:
       kompose.service.expose: organizer
-    command: bash -c "node /generator/dist/organizer.js"
+    command: bash -c "node /generator/dist/organizer/index.js"
   wallet:
     image: zkopru_node
     build:
@@ -57,12 +57,3 @@ services:
       kompose.controller.type: deployment
     command: >
       bash -c "sleep 10 && node /generator/dist/wallet.js"
-  turner:
-    image: zkopru_node
-    build:
-      context: ../
-      dockerfile: ./dockerfiles/Generator.dockerfile
-    depends_on:
-      - 'wallet'
-    command: bash -c "sleep 60 && node /generator/dist/blockturner.js"
-

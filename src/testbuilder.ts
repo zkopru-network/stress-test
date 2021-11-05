@@ -173,11 +173,6 @@ export class TestTxBuilder extends TxBuilder {
         !!this.swap,
         false,
       )
-      logger.info(
-        `this.feePerByte ${
-          this.feePerByte
-        } and total L2Fee : ${this.feePerByte.muln(size)}`,
-      )
       return this.feePerByte.muln(size)
     }
 
@@ -186,12 +181,23 @@ export class TestTxBuilder extends TxBuilder {
     }
 
     // Spend ETH containing notes until it hits the number
-    spendables.sort((a, b) => (a.eth().gt(b.eth()) ? -1 : 1))
+    spendables.sort((a, b) => (a.eth().gt(b.eth()) ? 1 : -1))
     while (getRequiredETH().gte(Sum.from(spendings).eth)) {
-      logger.info(`required eth: ${getRequiredETH().toString()}`)
-      logger.info(`spending eth: ${Sum.from(spendings).eth}`)
+      logger.info(
+        `transaction/tx-builder.ts - required eth: ${getRequiredETH().toString()}`,
+      )
+      logger.info(
+        `transaction/tx-builder.ts - spending eth: ${Sum.from(spendings).eth}`,
+      )
       const spending = spendables.pop()
-      logger.info(`spending: ${spendings.toString()}`)
+      logger.info(
+        `transaction/tx-builder.ts - spending utxos: [${spendings.map(utxo =>
+          utxo
+            .hash()
+            .toBytes32()
+            .toString(),
+        )}]`,
+      )
       if (spending === undefined) {
         const owned = Sum.from(spendings).eth
         const target = getRequiredETH()
@@ -214,13 +220,7 @@ export class TestTxBuilder extends TxBuilder {
     const finalFee = getTxFee()
     const nextSalt = this.sendings[0].salt.add(new Fp(1))
     if (!changeETH.isZero()) {
-      changes.push(
-        Utxo.newEtherNote({
-          eth: changeETH,
-          salt: nextSalt,
-          owner: this.changeTo,
-        }),
-      )
+      changes.push(Utxo.newEtherNote({ eth: changeETH, salt: nextSalt, owner: this.changeTo }))
     }
 
     const inflow = [...spendings]
