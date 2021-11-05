@@ -26,20 +26,20 @@ class OrganizerApi {
     const walletKeys = Object.keys(queueData)
 
     const result = this.context.organizerData.updatedResult()
-    
+
     // update data to walletinfo on `organizerData`
-    try {      
+    try {
       walletKeys.forEach(wallet => {
         const walletId = parseInt(wallet.split("_")[1])
-        
+
         result.testResult!.walletInfo
-        .filter(data => data.id == walletId)
-        .map(data => {
-          data.generatedTx = queueData[wallet].txCount
-          data.totalSpentFee = queueData[wallet].spentFee.toString()
-        })
+          .filter(data => data.id == walletId)
+          .map(data => {
+            data.generatedTx = queueData[wallet].txCount
+            data.totalSpentFee = queueData[wallet].spentFee.toString()
+          })
       })
-    } catch(error) {
+    } catch (error) {
       logger.warn(`stress-test/organizer/api.ts - wallet info may not updated yet, try later: ${error}`)
     }
 
@@ -162,31 +162,11 @@ class OrganizerApi {
 
     app.get('/tps-data', (req, res) => {
       // TODO : consider might happen uncle block for calculation of tps
-      let previousProposeTime: number
-      let limit = 100
-      if (req.query.limit) {
-        limit = parseInt(req.query.limit as string, 10)
-      }
+      const limit = req.params.limit ?? 100
+      
       if (organizerData.onChainData.proposeData !== []) {
-        const response = organizerData.onChainData.proposeData
-          .slice(-1 * (limit + 1))
-          .map(data => {
-            if (data.proposeNum === 0) {
-              previousProposeTime = data.timestamp
-            }
-            const duration = Math.floor(
-              (data.timestamp - previousProposeTime) / 1000,
-            )
-            previousProposeTime = data.timestamp
-            return {
-              proposalNum: data.proposeNum,
-              proposedTime: data.timestamp,
-              duration,
-              txcount: data.txcount,
-              tps: data.txcount / duration,
-            }
-          })
-        res.send(response.slice(-1 * limit))
+        const tpsData = this.context.organizerData.calcTPSdata()
+        res.send(tpsData.slice(-1 * limit))
       } else {
         res.send(`Not yet proposed on Layer2`)
       }

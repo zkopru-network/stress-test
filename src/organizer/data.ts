@@ -200,7 +200,7 @@ export class OrganizerData {
       },
       operation: {
         startTime: Date.now(),
-        endTime: 0,
+        endTime: 0, // Use this for checking status of result from CI side.
         targetTPS,
       },
       systemInformation: {
@@ -209,6 +209,38 @@ export class OrganizerData {
       },
       git: gitData
     }
+  }
+
+  // calc TPS data
+  calcTPSdata() {
+    const { proposeData } = this.onChainData
+    
+    let result
+    let previousProposeTime: number
+
+    if (proposeData !== []) {
+      result = proposeData
+        .map(data => {
+          if (data.proposeNum === 0) {
+            previousProposeTime = data.timestamp
+          }
+          const duration = Math.floor(
+            (data.timestamp - previousProposeTime) / 1000,
+          )
+          previousProposeTime = data.timestamp
+          return {
+            proposalNum: data.proposeNum,
+            proposedTime: data.timestamp,
+            duration,
+            txcount: data.txcount,
+            tps: data.txcount / duration,
+          }
+        })
+        .sort((a, b) => a.proposedTime - b.proposedTime)
+    } else {
+      result = []
+    }
+    return result
   }
 
   /** 
@@ -363,6 +395,7 @@ export class OrganizerData {
 
         },
         testResult: {
+          tpsData: this.calcTPSdata(),
           performance,
           recentProposedBlocks,
           recentAuctionData,
@@ -391,7 +424,7 @@ export class OrganizerData {
         await sleep(1000)
       }
     }
-    
+
     return this.web3.eth.subscribe('newBlockHeaders')
   }
 
