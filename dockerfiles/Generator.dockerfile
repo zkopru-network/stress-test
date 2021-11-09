@@ -64,12 +64,7 @@ COPY zkopru/packages/transaction/dist /generator/zkopru/packages/transaction/dis
 COPY zkopru/packages/tree/dist /generator/zkopru/packages/tree/dist
 COPY zkopru/packages/utils/dist /generator/zkopru/packages/utils/dist
 COPY zkopru/packages/zk-wizard/dist /generator/zkopru/packages/zk-wizard/dist
-<<<<<<< HEAD
-RUN mkdir /generator/scripts && echo "" > /generator/scripts/copyFiles.js
-#RUN lerna clean -y --loglevel silent && lerna bootstrap
-=======
 RUN mkdir /generator/scripts && echo "" > /generator/scripts/copyFiles.js && echo "" > /generator/scripts/setup.sh
->>>>>>> c9b22ba (fix: create dummy script files and organizer run command)
 
 RUN yarn install
 
