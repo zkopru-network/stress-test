@@ -9,9 +9,6 @@ platform:
   os: linux
   arch: amd64
 
-environment:
-  SKIP_SETUP: "true"
-
 steps:
 - name: fetch
   image: alpine/git
@@ -29,7 +26,7 @@ steps:
   - cd packages/circuits
   - npx ts-node utils/download-keys.ts
   - ls && ls keys
-  - cd /drone/src/stress-test && yarn && yarn build
+  - cd /drone/src/stress-test && SKIP_SETUP=true yarn && yarn build
 
 - name: build-image 
   image: docker/compose:debian-1.29.2
