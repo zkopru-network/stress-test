@@ -46,10 +46,13 @@ steps:
   volumes:
   - name: docker.sock
     path: /var/run/docker.sock
+  environment:
+    walletNum:
+      from_secret: wallet-number
   detach: true
   commands:
   - cd stress-test
-  - docker-compose -p stress-test -f compose/docker-compose.localtest-geth.yml up --force-recreate
+  - docker-compose -p stress-test -f compose/docker-compose.localtest-geth.yml up --force-recreate --scale wallet=$walletNum
 
 - name: watch-test
   image: docker/compose:debian-1.29.2
@@ -67,7 +70,6 @@ steps:
   pull: never
   image: zkopru/git
   commands:
-  - sleep 30
   - cd /drone/src/stress-test-results
   - git checkout develop
   - git checkout -b test/${DRONE_BUILD_NUMBER}
