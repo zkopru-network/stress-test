@@ -33,7 +33,7 @@ export class Organizer {
     const memInfo = await si.mem()
 
     // git branch and commit heash
-    const targetMeta = ['stress-test', 'zkopru']
+    const targetMeta = ['stress-test', 'stres-test/.git/modules/zkopru']
     let gitData = {}
 
     targetMeta.forEach(repo => {

@@ -28,7 +28,6 @@ COPY zkopru/packages/circuits/keys /proj/keys
 
 # COPY git data for generating metadata
 COPY .git /generator/metadata/stress-test/
-COPY zkopru/.git /generator/metadata/zkopru/
 
 # Copy package.json
 COPY zkopru/.package-dev.json /generator/zkopru/package.json
