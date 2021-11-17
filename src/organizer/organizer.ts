@@ -40,10 +40,10 @@ export class Organizer {
       let branch: string
       let commit: string
       // headFile path is fixed dockerfile
-      const headFile = (`metadata/${repo}/HEAD`)
+      const headFile = `metadata/${repo}/HEAD`
 
       if (fs.existsSync(headFile)) {
-        const head = fs.readFileSync(`metadata/${repo}/HEAD`)
+        const head = fs.readFileSync(headFile)
         const headPath = head.toString().split(" ")[1].trim()
         const headHash = fs.readFileSync(`metadata/${repo}/${headPath}`)
 
@@ -53,7 +53,8 @@ export class Organizer {
         branch = "Not Found",
           commit = "0000000000000000000000000000000000000000"
       }
-      gitData[repo] = { branch, commit }
+      const repoName = repo.split('/').pop()!
+      gitData[repoName] = { branch, commit }
     })
 
     const { targetTPS } = this.context.organizerQueue.currentRate()
