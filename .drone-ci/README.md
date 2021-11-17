@@ -32,7 +32,7 @@ Please see links for set these variables above.
  stress-test/.drone-ci# docker-compose up -d
 ```
 
-## Drone CI Setup
+## Prepare for stress-test
 
 If you are going to setup with drone CI with `.drone-ci/.drone.yml`. you need `zkopru/git` image, which has registered ssh key on github.
 
@@ -45,3 +45,15 @@ You can build `zkopru/git` image below command.
 ```
 
 Note that, the `ID_RSA` variable is generated rsa key from your machine. than must register it `zkopru-network/stress-test` repo as `Deploy Keys`.
+
+## Repository Setup
+
+Now, you can setup on your drone `Server` web ui.
+
+Please connect url, which you set `DRONE_SERVER_HOST` then activate `stress-test` repository.
+
+You must modify configuration path in setting.
+
+> change path from `.drone.yml` to `.drone-ci/.drone.yml` like below.
+
+![setting](setup_repository.png)
