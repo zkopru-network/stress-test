@@ -1,9 +1,13 @@
 #!/bin/sh
+if [[ ! -z "${SKIP_SETUP}" ]]; then
+  echo "Skipping setup script"
+  exit
+fi
 
 set -e
-
-git submodule update --init zkopru
-
+if [[ ! -z "${SKIP_SUBMODULE}" ]]; then
+  git submodule update --init zkopru
+fi
 cd zkopru
 
 yarn

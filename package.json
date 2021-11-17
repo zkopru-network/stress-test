@@ -66,6 +66,7 @@
   "devDependencies": {
     "@typechain/web3-v1": "^2.2.0",
     "@types/jest": "^27.0.1",
+    "dockerode": "^3.3.1",
     "jest": "^24.7.1",
     "link-module-alias": "^1.2.0",
     "shx": "^0.3.3",

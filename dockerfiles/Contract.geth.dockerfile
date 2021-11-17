@@ -1,15 +1,11 @@
 FROM ethereum/client-go:v1.10.3 AS base
 
 # Deploy contract on geth private network
-FROM node:14-alpine
+FROM node:16-alpine
 COPY --from=base /usr/local/bin/geth /usr/local/bin/geth
-RUN apk add --no-cache --virtual .gyp \
-    python \
-    make \
-    g++ \
-    && npm install -g truffle --unsafe-perm=true --allow-root \
-    && apk del .gyp
-RUN apk add git curl
+RUN npm install -g truffle ganache-cli --unsafe-perm=true --allow-root 
+    # apt update && apt install -y python make g++ git curl
+
 WORKDIR /proj
 COPY ./zkopru/packages/contracts/package.json /proj/package.json
 # Stub a package json for @zkopru/utils so yarn install works
