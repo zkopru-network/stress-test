@@ -5,9 +5,9 @@ services:
     image: zkopru_testnet_geth
     build:
       context: ../
-      dockerfile: ./dockerfiles/Contract.geth.dockerfile
-    ports:
-      - '5000:5000'
+      dockerfile: dockerfiles/Contract.geth.dockerfile
+    networks:
+      - test
     labels:
       kompose.service.expose: testnet
     command: sh /proj/run_geth.sh
@@ -15,10 +15,9 @@ services:
     image: zkopru_node
     build:
       context: ../
-      dockerfile: ./dockerfiles/Generator.dockerfile
-    ports:
-      - '8888:8888'
-      - '5354:5354'
+      dockerfile: dockerfiles/Generator.dockerfile
+    networks:
+      - test
     depends_on:
       - 'testnet'
     labels:
@@ -28,17 +27,17 @@ services:
       node /generator/dist/coordinator.js"
   redis:
     image: redis
-    ports:
-      - '6379:6379'
+    networks:
+      - test
     labels:
       kompose.service.expose: redis
   organizer:
     image: zkopru_node
     build:
       context: ../
-      dockerfile: ./dockerfiles/Generator.dockerfile
-    ports:
-      - '8080:8080'
+      dockerfile: dockerfiles/Generator.dockerfile
+    networks:
+      - test
     depends_on:
       - 'redis'
       - 'coordinator'
@@ -49,7 +48,9 @@ services:
     image: zkopru_node
     build:
       context: ../
-      dockerfile: ./dockerfiles/Generator.dockerfile
+      dockerfile: dockerfiles/Generator.dockerfile
+    networks:
+      - test
     depends_on:
       - 'redis'
       - 'organizer'
@@ -57,3 +58,7 @@ services:
       kompose.controller.type: deployment
     command: >
       bash -c "sleep 10 && node /generator/dist/wallet.js"
+
+networks:
+  test:
+    name: stress-test

@@ -1,4 +1,4 @@
-# Transaction Generator
+# Zkopru Stress Tester
 
 ## Installation
 

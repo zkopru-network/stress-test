@@ -1,9 +1,8 @@
 FROM node:16-stretch-slim
 RUN apt update
-RUN apt install -y git make musl-dev golang-go sqlite g++ tmux curl jq
+RUN apt install -y git make musl-dev golang-go sqlite g++ curl jq netcat
 RUN mkdir -p /usr/share/man/man1
 RUN mkdir -p /usr/share/man/man7
-RUN apt install -y netcat
 
 # Configure Go
 ENV GOROOT /usr/lib/go
@@ -28,10 +27,7 @@ WORKDIR /generator
 COPY zkopru/packages/circuits/keys /proj/keys
 
 # COPY git data for generating metadata
-COPY .git/HEAD metadata/stress-test/HEAD
-COPY .git/refs metadata/stress-test/refs
-COPY zkopru/.git/HEAD metadata/zkopru/HEAD
-COPY zkopru/.git/refs metadata/zkopru/refs
+COPY .git /generator/metadata/stress-test/
 
 # Copy package.json
 COPY zkopru/.package-dev.json /generator/zkopru/package.json
@@ -64,7 +60,10 @@ COPY zkopru/packages/transaction/dist /generator/zkopru/packages/transaction/dis
 COPY zkopru/packages/tree/dist /generator/zkopru/packages/tree/dist
 COPY zkopru/packages/utils/dist /generator/zkopru/packages/utils/dist
 COPY zkopru/packages/zk-wizard/dist /generator/zkopru/packages/zk-wizard/dist
-RUN mkdir /generator/scripts && echo "" > /generator/scripts/copyFiles.js && echo "" > /generator/scripts/setup.sh
+
+# Copy or Generate scripts
+COPY scripts/testWatcher.js /generator/scripts/testWatcher.js
+RUN echo "" > /generator/scripts/copyFiles.js && echo "" > /generator/scripts/setup.sh
 
 RUN yarn install
 

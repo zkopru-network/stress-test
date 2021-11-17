@@ -1,0 +1,81 @@
+kind: pipeline
+type: docker
+name: default
+
+clone:
+  disable: true
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: fetch
+  image: alpine/git
+  commands:
+  - git clone https://github.com/${DRONE_REPO_OWNER}/stress-test-results.git
+  - git clone -b ${DRONE_BRANCH}  https://github.com/${DRONE_REPO}.git
+  - cd stress-test
+  - git submodule update --init
+
+- name: build
+  image: node:16-stretch-slim
+  commands:
+  - apt update && apt install git -y
+  - cd /drone/src/stress-test/zkopru && yarn && yarn build
+  - cd packages/circuits
+  - npx ts-node utils/download-keys.ts
+  - ls && ls keys
+  - cd /drone/src/stress-test && SKIP_SETUP=true yarn && yarn build
+
+- name: build-image 
+  image: docker/compose:debian-1.29.2
+  volumes:
+  - name: docker.sock
+    path: /var/run/docker.sock
+  commands:
+  - cd stress-test
+  - docker-compose -p stress-test -f compose/docker-compose.localtest-geth.yml down
+  - docker-compose -p stress-test -f compose/docker-compose.localtest-geth.yml build testnet coordinator
+
+- name: run-test
+  image: docker/compose:debian-1.29.2
+  volumes:
+  - name: docker.sock
+    path: /var/run/docker.sock
+  environment:
+    walletNum:
+      from_secret: wallet-number
+  detach: true
+  commands:
+  - cd stress-test
+  - docker-compose -p stress-test -f compose/docker-compose.localtest-geth.yml up --force-recreate --scale wallet=$walletNum
+
+- name: watch-test
+  image: docker/compose:debian-1.29.2
+  volumes:
+  - name: docker.sock
+    path: /var/run/docker.sock
+  commands:
+  - sleep 30
+  - docker run --name watchTower -v /var/run/docker.sock:/var/run/docker.sock --network stress-test zkopru_node node /generator/scripts/testWatcher.js
+  - docker cp watchTower:/generator/result.json ./
+  - docker rm watchTower
+  - docker-compose -p stress-test -f stress-test/compose/docker-compose.localtest-geth.yml down
+
+- name: commit-result
+  pull: never
+  image: zkopru/git
+  commands:
+  - cd /drone/src/stress-test-results
+  - git checkout develop
+  - git checkout -b test/${DRONE_BUILD_NUMBER}
+  - mv /drone/src/result.json /drone/src/stress-test-results/src/content/result_${DRONE_BUILD_NUMBER}.json
+  - git add .
+  - git commit -m "test result ${DRONE_BUILD_NUMBER}"
+  - git push origin test/${DRONE_BUILD_NUMBER}
+
+volumes:
+- name: docker.sock
+  host:
+    path: /var/run/docker.sock
