@@ -61,8 +61,7 @@ steps:
   - docker run --name watchTower -v /var/run/docker.sock:/var/run/docker.sock --network stress-test zkopru_node node /generator/scripts/testWatcher.js
   - docker cp watchTower:/generator/result.json ./
   - docker rm watchTower
-  - cat /drone/src/result.json
-  - sleep 120
+  - docker-compose -p stress-test -f compose/docker-compose.localtest-geth.yml down
 
 - name: commit-result
   pull: never
@@ -71,7 +70,7 @@ steps:
   - sleep 30
   - cd /drone/src/stress-test-results
   - git checkout develop
-  - git checkout -b test/${DRONE_BUILD_NUMBER} 
+  - git checkout -b test/${DRONE_BUILD_NUMBER}
   - mv /drone/src/result.json /drone/src/stress-test-results/src/content/result_${DRONE_BUILD_NUMBER}.json
   - git add .
   - git commit -m "test result ${DRONE_BUILD_NUMBER}"
