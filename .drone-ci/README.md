@@ -48,7 +48,7 @@ Note that, the `ID_RSA` variable is generated rsa key from your machine. than mu
 
 ## Repository Setup
 
-Now, you can setup on your drone `Server` web ui.
+Now, you can setup on your drone `Server` web UI.
 
 Please connect url, which you set `DRONE_SERVER_HOST` then activate `stress-test` repository.
 
@@ -56,4 +56,8 @@ You must modify configuration path in setting.
 
 > change path from `.drone.yml` to `.drone-ci/.drone.yml` like below.
 
-![setting](setup_repository.png)
+![setting](https://raw.githubusercontent.com/zkopru-network/stress-test/develop/.drone-ci/setup_respository.png)
+
+also, you need to set secret as name `wallet_number`, this variable(number) will be use how many wallet node up when start testing. plase set at least `1`.
+
+this `.drone-ci/.drone.yml` only triggered by `zkopru` repository. In other words, you must activate  `zkopru` repository on the same `Server`.
