@@ -87,4 +87,4 @@ trigger:
   repo:
     - ${DRONE_REPO_OWNER}/zkopru
   branch:
-    - master
+    - main
