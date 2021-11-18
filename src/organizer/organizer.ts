@@ -33,7 +33,7 @@ export class Organizer {
     const memInfo = await si.mem()
 
     // git branch and commit heash
-    const targetMeta = ['stress-test', 'stres-test/.git/modules/zkopru']
+    const targetMeta = ['stress-test', 'zkopru']
     let gitData = {}
 
     targetMeta.forEach(repo => {
@@ -53,8 +53,7 @@ export class Organizer {
         branch = "Not Found",
           commit = "0000000000000000000000000000000000000000"
       }
-      const repoName = repo.split('/').pop()!
-      gitData[repoName] = { branch, commit }
+      gitData[repo] = { branch, commit }
     })
 
     const { targetTPS } = this.context.organizerQueue.currentRate()

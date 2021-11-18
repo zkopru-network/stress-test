@@ -2,6 +2,9 @@ kind: pipeline
 type: docker
 name: default
 
+concurrency:
+  limit: 1
+
 clone:
   disable: true
 
@@ -16,7 +19,7 @@ steps:
   - git clone https://github.com/${DRONE_REPO_OWNER}/stress-test-results.git
   - git clone -b ${DRONE_BRANCH}  https://github.com/${DRONE_REPO}.git
   - cd stress-test
-  - git submodule update --init
+  - git clone https://github.com/${DRONE_REPO_OWNER}/zkopru.git
 
 - name: build
   image: node:16-stretch-slim
@@ -79,3 +82,9 @@ volumes:
 - name: docker.sock
   host:
     path: /var/run/docker.sock
+
+trigger:
+  repo:
+    - ${DRONE_REPO_OWNER}/zkopru
+  branch:
+    - main
