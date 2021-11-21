@@ -79,7 +79,7 @@ async function getContainersInfo(networkName) {
       console.log(`Failed - No proposal within two hours.`)
       break
     } else if (TestingPeriod > 7 * 24 * 3600 * 1000 ) {
-      console.log(`Success - We are fully tested (7 days) .`)
+      console.log(`Success - We are fully tested (7 days).`)
       break
     }
   } while (true)

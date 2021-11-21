@@ -62,8 +62,8 @@ COPY zkopru/packages/utils/dist /generator/zkopru/packages/utils/dist
 COPY zkopru/packages/zk-wizard/dist /generator/zkopru/packages/zk-wizard/dist
 
 # Copy or Generate scripts
-COPY scripts/testWatcher.js /generator/scripts/testWatcher.js
-RUN echo "" > /generator/scripts/copyFiles.js && echo "" > /generator/scripts/setup.sh
+COPY scripts/test-watcher.js /generator/scripts/test-watcher.js
+RUN echo "" > /generator/scripts/copy-files.js && echo "" > /generator/scripts/setup.sh
 
 RUN yarn install
 
