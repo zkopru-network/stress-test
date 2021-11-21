@@ -14,7 +14,7 @@
   "preferGlobal": true,
   "scripts": {
     "setup": "bash scripts/setup.sh",
-    "preinstall": "yarn setup && node scripts/copyFiles.js",
+    "preinstall": "yarn setup && node scripts/copy-files.js",
     "postinstall": "yarn link-modules",
     "prebuild": "shx mkdir -p dist",
     "build": "tsc --build tsconfig.build.json",
