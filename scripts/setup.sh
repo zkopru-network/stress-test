@@ -14,9 +14,7 @@ yarn
 yarn build
 
 yarn images pull circuits
-cd packages/dataset
-yarn load-keys
-cd ../circuits
+cd packages/circuits
 yarn setup
 yarn build-keys
 yarn postbuild-keys
