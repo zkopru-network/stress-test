@@ -1,12 +1,10 @@
-/* eslint-disable no-case-declarations */
-import { toWei } from 'web3-utils'
 import fetch from 'node-fetch'
-
 import { FullNode } from '@zkopru/core'
 import { logger, sleep } from '@zkopru/utils'
 import { TransferGenerator } from './generator'
 import { getBase, startLogger } from './generator-utils'
 import { config } from './config'
+import { WalletInfo } from './organizer/types'
 
 startLogger(`./WALLET_LOG`)
 
@@ -14,31 +12,34 @@ const redisIp = process.env.REDIS_IP ?? `redis`
 const organizerUrl = process.env.ORGANIZER_URL ?? 'http://organizer:8080'
 
 async function runGenerator() {
-  logger.info('Wallet Initializing - get ID from organizer')
+  logger.info(`stress-test/wallet.ts - wallet Initializing, get 'id' from organizer`)
   const registerResponse = await fetch(`${organizerUrl}/register`, {
     method: 'post',
     body: JSON.stringify({
       role: 'wallet',
+      params: { 
+        from: '0x0',
+        weiPerByte: 0,
+      } as WalletInfo
     }),
   })
   const registered = await registerResponse.json()
-
-  logger.info(`Wallet selected account index ${registered.ID + 3}`)
+  logger.info(`stress-test/wallet.ts - wallet selected account index ${registered.id + 3}`)
 
   // Wait deposit sequence
   let ready = false
-  logger.info(`Standby for deposit are ready`)
+  logger.info(`stress-test/wallet.ts - stand by for 'can-deposit' are ready`)
   while (!ready) {
     try {
-      const readyResponse = await fetch(`${organizerUrl}/canDeposit`, {
+      const readyResponse = await fetch(`${organizerUrl}/can-deposit`, {
         method: 'post',
         body: JSON.stringify({
-          ID: registered.ID,
+          id: registered.id,
         }),
       })
       ready = await readyResponse.json()
     } catch (error) {
-      logger.info(`Error checking organizer ready - ${error}`)
+      logger.error(`stress-test/wallet.ts - error on checking organizer ready: ${error}`)
     }
     await sleep(5000)
   }
@@ -48,11 +49,11 @@ async function runGenerator() {
     config.mnemonic,
     'helloworld',
   )
-  const walletAccount = await hdWallet.createAccount(+registered.ID + 3)
+  const walletAccount = await hdWallet.createAccount(+registered.id + 3)
 
   const walletNode: FullNode = await FullNode.new({
-    provider: webSocketProvider,
     address: config.zkopruContract, // Zkopru contract
+    provider: webSocketProvider,
     db: mockupDB,
     accounts: [walletAccount],
   })
@@ -66,11 +67,10 @@ async function runGenerator() {
     account: walletAccount,
     accounts: [walletAccount],
     node: walletNode,
-    noteAmount: { eth: toWei('0.1'), fee: toWei('0.01') },
     erc20: [],
     erc721: [],
     snarkKeyPath: '/proj/keys',
-    ID: registered.ID,
+    id: registered.id,
     redis: {
       host: redisIp,
       port: 6379,
@@ -79,7 +79,7 @@ async function runGenerator() {
 
   const generator = new TransferGenerator(transferGeneratorConfig)
 
-  logger.info(`Start Generate Tansaction`)
+  logger.info(`stress-test/wallet.ts - start transaction generator`)
   await generator.startGenerator()
 }
 

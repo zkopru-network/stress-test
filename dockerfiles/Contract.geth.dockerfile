@@ -1,15 +1,11 @@
 FROM ethereum/client-go:v1.10.3 AS base
 
 # Deploy contract on geth private network
-FROM node:14-alpine
+FROM node:16-alpine
 COPY --from=base /usr/local/bin/geth /usr/local/bin/geth
-RUN apk add --no-cache --virtual .gyp \
-    python \
-    make \
-    g++ \
-    && npm install -g truffle --unsafe-perm=true --allow-root \
-    && apk del .gyp
-RUN apk add git curl
+RUN npm install -g truffle ganache-cli --unsafe-perm=true --allow-root 
+    # apt update && apt install -y python make g++ git curl
+
 WORKDIR /proj
 COPY ./zkopru/packages/contracts/package.json /proj/package.json
 # Stub a package json for @zkopru/utils so yarn install works
@@ -25,5 +21,5 @@ COPY ./zkopru/packages/contracts/keys /proj/keys
 COPY ./genesis.json /proj/genesis.json
 COPY ./testnet-key /proj/testnet-key
 COPY ./testnet-pass /proj/testnet-pass
-COPY ./run_geth.sh /proj/run_geth.sh
+COPY ./scripts/run_geth.sh /proj/run_geth.sh
 CMD ["geth", "--dev", "--networkid", "20200406", "--datadir", "data", "--rpc", "--rpcaddr", "0.0.0.0", "--rpccorsdomain", "*","--http.api", "eth,net,web3,personal,miner", "--nousb"]

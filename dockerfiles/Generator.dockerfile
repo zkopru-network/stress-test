@@ -1,9 +1,8 @@
 FROM node:16-stretch-slim
 RUN apt update
-RUN apt install -y git make musl-dev golang-go sqlite g++ tmux curl jq
+RUN apt install -y git make musl-dev golang-go sqlite g++ curl jq netcat
 RUN mkdir -p /usr/share/man/man1
 RUN mkdir -p /usr/share/man/man7
-RUN apt install -y netcat
 
 # Configure Go
 ENV GOROOT /usr/lib/go
@@ -26,6 +25,9 @@ WORKDIR /generator
 
 # Copy SNARK keys
 COPY zkopru/packages/circuits/keys /proj/keys
+
+# COPY git data for generating metadata
+COPY .git /generator/metadata/stress-test/
 
 # Copy package.json
 COPY zkopru/.package-dev.json /generator/zkopru/package.json
@@ -53,12 +55,15 @@ COPY zkopru/packages/coordinator/dist /generator/zkopru/packages/coordinator/dis
 COPY zkopru/packages/core/dist /generator/zkopru/packages/core/dist
 COPY zkopru/packages/cli/dist /generator/zkopru/packages/cli/dist
 COPY zkopru/packages/database/dist /generator/zkopru/packages/database/dist
-COPY ./dist /generator/dist
+COPY ./dist/src /generator/dist
 COPY zkopru/packages/transaction/dist /generator/zkopru/packages/transaction/dist
 COPY zkopru/packages/tree/dist /generator/zkopru/packages/tree/dist
 COPY zkopru/packages/utils/dist /generator/zkopru/packages/utils/dist
 COPY zkopru/packages/zk-wizard/dist /generator/zkopru/packages/zk-wizard/dist
-#RUN lerna clean -y --loglevel silent && lerna bootstrap
+
+# Copy or Generate scripts
+COPY scripts/test-watcher.js /generator/scripts/test-watcher.js
+RUN echo "" > /generator/scripts/copy-files.js && echo "" > /generator/scripts/setup.sh
 
 RUN yarn install
 

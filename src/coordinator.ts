@@ -1,12 +1,12 @@
-/* eslint-disable no-case-declarations */
 import dns from 'dns'
 import fetch from 'node-fetch'
 import { TransactionReceipt } from 'web3-core'
+import { Fp } from '@zkopru/babyjubjub'
 import { Block, FullNode } from '@zkopru/core'
 import { Coordinator } from '@zkopru/coordinator'
 import { logger } from '@zkopru/utils'
 import { config } from './config'
-import { ProposeData } from './types'
+import { ProposeData, CoordinatorInfo } from './organizer/types'
 import { getBase, startLogger } from './generator-utils'
 
 startLogger('COORDINATOR_LOG')
@@ -25,13 +25,14 @@ async function dnsLookup(hostname: string) {
 }
 
 async function testCoodinator() {
-  logger.info('Run Test Coodinator')
+  logger.info('stress-test/coordinator.ts - run test coodinator')
   const { hdWallet, mockupDB, webSocketProvider } = await getBase(
     config.testnetUrl,
     config.mnemonic,
     'helloworld',
   )
 
+  // TODO: more than one coordinator
   const coordinatorAccount = await hdWallet.createAccount(0)
   const slaherAccount = await hdWallet.createAccount(1)
 
@@ -53,7 +54,7 @@ async function testCoodinator() {
     vhosts: '*',
     priceMultiplier: 48,
     publicUrls: `${coordinatorIp}:${coordinatorPort}`, // This is default params, Will be using registered coordinator address on Contract.
-    port: coordinatorPort,
+    port: coordinatorPort
   }
 
   const coordinator = new Coordinator(
@@ -61,6 +62,24 @@ async function testCoodinator() {
     coordinatorAccount.ethAccount,
     coordinatorConfig,
   )
+
+  const registerResponse = await fetch(`${organizerUrl}/register`, {
+    method: 'post',
+    body: JSON.stringify({
+      role: 'coordinator',
+      params: {
+        url: coordinatorConfig.publicUrls,
+        from: coordinatorAccount.ethAddress,
+        maxBytes: coordinatorConfig.maxBytes,
+        priceMultiplier: coordinatorConfig.priceMultiplier,
+        maxBid: coordinatorConfig.maxBid
+      } as CoordinatorInfo
+    }),
+  })
+  if (registerResponse.status !== 200) {
+    logger.warn(`stress-test/coordinator.ts - registration failed on the organizer: ${await registerResponse.text()}`)
+  }
+  logger.info(`stress-test/coordinator.ts - coordinator registered: ${registerResponse.json()}`)
 
   let prevBlockHash: string = config.genesisHash
   let currentBlockHash = ''
@@ -76,8 +95,9 @@ async function testCoodinator() {
       blockHash: currentBlockHash,
       parentsBlockHash: prevBlockHash,
       txcount: block.body.txs.length,
+      paidFee: block.body.txs.reduce((sum, tx) => sum.add(tx.fee), Fp.from(0))
     }
-    logger.info(`Proposed a new block : ${currentBlockHash}`)
+    logger.info(`stress-test/coordinator.ts - proposed a new block: ${currentBlockHash}`)
     return block
   }
 
@@ -91,20 +111,20 @@ async function testCoodinator() {
         layer1BlockNumber: blockNumber,
       }
       try {
-        const response = await fetch(`${organizerUrl}/propose`, {
+        const response = await fetch(`${organizerUrl}/propose-blocks`, {
           method: 'post',
           body: JSON.stringify(proposeData),
         })
         if (response.status !== 200) {
-          logger.warn(`Organizer well not received : ${await response.text()}`)
+          logger.warn(`stress-test/coordinator.ts - response not 200 for 'propose-blocks' : ${await response.text()}`)
         }
         prevBlockHash = currentBlockHash
         proposeNum += 1
       } catch (error) {
-        logger.error(`Failed to send proposeData to organizer`)
+        logger.error(`stress-test/coordinator.ts - failed to send proposeData to organizer: ${error}`)
       }
     } else {
-      logger.warn(`Propose Tx ${proposeData.layer1TxHash} reverted`)
+      logger.warn(`stress-test/coordinator.ts - propose tx reverted: ${proposeData.layer1TxHash}`)
     }
   }
 

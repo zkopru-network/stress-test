@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import fs from 'fs'
 import util from 'util'
 import Web3 from 'web3'
@@ -18,7 +17,7 @@ import {
 import { HDWallet, ZkAccount } from '@zkopru/account'
 import { logStream } from '@zkopru/utils'
 import { SQLiteConnector, schema } from '@zkopru/database/dist/node'
-import { ZkWallet } from '~zk-wizard/zk-wallet'
+import { ZkWallet } from '@zkopru/zk-wizard'
 
 // helper functions
 export async function getBase(url: string, mnemonic: string, password: string) {
@@ -48,7 +47,6 @@ export async function getBase(url: string, mnemonic: string, password: string) {
 }
 
 export async function getDepositTx(wallet, note: Note, fee: F) {
-  // TODO: set Type
   const { deposit } = wallet.node.layer1.user.methods
   const tx = deposit(
     note.owner.spendingPubKey().toString(),
@@ -97,7 +95,7 @@ export function startLogger(fileName: string) {
   logStream.addStream(prettyStream)
 }
 
-// TODO: get fency current Coodinator Ip
+// TODO: refactor get current Coodinator Ip
 export function getLocalIP() {
   const nets = networkInterfaces()
   const net = nets.eth0

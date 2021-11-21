@@ -4,9 +4,9 @@ items:
     kind: Service
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: coordinator
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: coordinator
@@ -27,9 +27,9 @@ items:
     kind: Service
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: organizer
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: organizer
@@ -47,9 +47,9 @@ items:
     kind: Service
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: redis
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: redis
@@ -67,9 +67,9 @@ items:
     kind: Service
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: testnet
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: testnet
@@ -83,13 +83,33 @@ items:
         io.kompose.service: testnet
     status:
       loadBalancer: {}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
+        kompose.controller.type: deployment
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: wallet
+      name: wallet
+    spec:
+      ports:
+        - name: "4444"
+          port: 4444
+          targetPort: 4444
+      selector:
+        io.kompose.service: wallet
+    status:
+      loadBalancer: {}
   - apiVersion: apps/v1
     kind: Deployment
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: coordinator
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: coordinator
@@ -103,9 +123,9 @@ items:
       template:
         metadata:
           annotations:
-            kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+            kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
             kompose.service.expose: coordinator
-            kompose.version: 1.22.0 (955b78124)
+            kompose.version: 1.26.0 (40646f47)
           creationTimestamp: null
           labels:
             io.kompose.service: coordinator
@@ -114,8 +134,8 @@ items:
             - args:
                 - bash
                 - -c
-                - nc -l -p 5354 && node /proj/packages/generator/dist/coordinator.js
-              image: sifnoc/zkopru_node:latest
+                - nc -l -p 5354 && node /generator/dist/coordinator.js
+              image: zkopru_node:latest
               name: coordinator
               ports:
                 - containerPort: 8888
@@ -123,13 +143,13 @@ items:
               resources: {}
           restartPolicy: Always
     status: {}
-  - apiVersion: extensions/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: coordinator
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: coordinator
@@ -140,17 +160,21 @@ items:
           http:
             paths:
               - backend:
-                  serviceName: coordinator
-                  servicePort: 8888
+                  service:
+                    name: coordinator
+                    port:
+                      number: 8888
+                path: /
+                pathType: Prefix
     status:
       loadBalancer: {}
   - apiVersion: apps/v1
     kind: Deployment
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: organizer
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: organizer
@@ -164,9 +188,9 @@ items:
       template:
         metadata:
           annotations:
-            kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+            kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
             kompose.service.expose: organizer
-            kompose.version: 1.22.0 (955b78124)
+            kompose.version: 1.26.0 (40646f47)
           creationTimestamp: null
           labels:
             io.kompose.service: organizer
@@ -175,21 +199,21 @@ items:
             - args:
                 - bash
                 - -c
-                - node /proj/packages/generator/dist/organizer.js
-              image: sifnoc/zkopru_node:latest
+                - node /generator/dist/organizer/index.js
+              image: zkopru_node:latest
               name: organizer
               ports:
                 - containerPort: 8080
               resources: {}
           restartPolicy: Always
     status: {}
-  - apiVersion: extensions/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: organizer
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: organizer
@@ -200,17 +224,21 @@ items:
           http:
             paths:
               - backend:
-                  serviceName: organizer
-                  servicePort: 8080
+                  service:
+                    name: organizer
+                    port:
+                      number: 8080
+                path: /
+                pathType: Prefix
     status:
       loadBalancer: {}
   - apiVersion: apps/v1
     kind: Deployment
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: redis
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: redis
@@ -224,9 +252,9 @@ items:
       template:
         metadata:
           annotations:
-            kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+            kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
             kompose.service.expose: redis
-            kompose.version: 1.22.0 (955b78124)
+            kompose.version: 1.26.0 (40646f47)
           creationTimestamp: null
           labels:
             io.kompose.service: redis
@@ -239,13 +267,13 @@ items:
               resources: {}
           restartPolicy: Always
     status: {}
-  - apiVersion: extensions/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: redis
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: redis
@@ -256,17 +284,21 @@ items:
           http:
             paths:
               - backend:
-                  serviceName: redis
-                  servicePort: 6379
+                  service:
+                    name: redis
+                    port:
+                      number: 6379
+                path: /
+                pathType: Prefix
     status:
       loadBalancer: {}
   - apiVersion: apps/v1
     kind: Deployment
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: testnet
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: testnet
@@ -280,9 +312,9 @@ items:
       template:
         metadata:
           annotations:
-            kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+            kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
             kompose.service.expose: testnet
-            kompose.version: 1.22.0 (955b78124)
+            kompose.version: 1.26.0 (40646f47)
           creationTimestamp: null
           labels:
             io.kompose.service: testnet
@@ -291,20 +323,20 @@ items:
             - args:
                 - sh
                 - /proj/run_geth.sh
-              image: sifnoc/zkopru_testnet:geth
+              image: zkopru_testnet_geth:latest
               name: testnet
               ports:
                 - containerPort: 5000
               resources: {}
           restartPolicy: Always
     status: {}
-  - apiVersion: extensions/v1beta1
+  - apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.service.expose: testnet
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: testnet
@@ -315,58 +347,27 @@ items:
           http:
             paths:
               - backend:
-                  serviceName: testnet
-                  servicePort: 5000
+                  service:
+                    name: testnet
+                    port:
+                      number: 5000
+                path: /
+                pathType: Prefix
     status:
       loadBalancer: {}
   - apiVersion: apps/v1
     kind: Deployment
     metadata:
       annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
-        kompose.version: 1.22.0 (955b78124)
-      creationTimestamp: null
-      labels:
-        io.kompose.service: turner
-      name: turner
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          io.kompose.service: turner
-      strategy: {}
-      template:
-        metadata:
-          annotations:
-            kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
-            kompose.version: 1.22.0 (955b78124)
-          creationTimestamp: null
-          labels:
-            io.kompose.service: turner
-        spec:
-          containers:
-            - args:
-                - bash
-                - -c
-                - sleep 60 && node /proj/packages/generator/dist/blockturner.js
-              image: sifnoc/zkopru_node:latest
-              name: turner
-              resources: {}
-          restartPolicy: Always
-    status: {}
-  - apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      annotations:
-        kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+        kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
         kompose.controller.type: deployment
-        kompose.version: 1.22.0 (955b78124)
+        kompose.version: 1.26.0 (40646f47)
       creationTimestamp: null
       labels:
         io.kompose.service: wallet
       name: wallet
     spec:
-      replicas: 2
+      replicas: 1
       selector:
         matchLabels:
           io.kompose.service: wallet
@@ -374,9 +375,9 @@ items:
       template:
         metadata:
           annotations:
-            kompose.cmd: kompose convert -f docker-compose.localtest-geth.yml -o ./dockerfiles/kube.localtest-geth.yaml
+            kompose.cmd: kompose convert -f docker-compose.localtest-geth.dev.yml -o kube-localtest-geth-deployment.yaml -v
             kompose.controller.type: deployment
-            kompose.version: 1.22.0 (955b78124)
+            kompose.version: 1.26.0 (40646f47)
           creationTimestamp: null
           labels:
             io.kompose.service: wallet
@@ -385,10 +386,14 @@ items:
             - args:
                 - bash
                 - -c
-                - sleep 10 && node /proj/packages/generator/dist/wallet.js
-              image: sifnoc/zkopru_node:latest
+                - sleep 10 && node /generator/dist/wallet.js
+              image: zkopru_node:latest
               name: wallet
+              ports:
+                - containerPort: 4444
               resources: {}
+          restartPolicy: Always
     status: {}
 kind: List
 metadata: {}
+

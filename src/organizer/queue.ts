@@ -1,6 +1,7 @@
 import { Job, Queue, QueueScheduler, Worker } from 'bullmq'
 import { RawTx, ZkTx } from '@zkopru/transaction'
-import { logger } from '@zkopru/utils'
+import { Fp } from '@zkopru/babyjubjub'
+import { OrganizerConfig } from './context'
 
 /*
 Organizer Queue has two types of queue, 'main' and 'sub'.
@@ -47,17 +48,6 @@ interface Schedulers {
   sub: { [key: string]: QueueScheduler }
 }
 
-interface QueueRate {
-  name?: string
-  max: number
-  duration?: number
-}
-
-export interface OrganizerQueueConfig {
-  connection: { host: string; port: number }
-  rates: QueueRate[]
-}
-
 export class OrganizerQueue {
   private currentQueue: string // currentRate
 
@@ -67,16 +57,24 @@ export class OrganizerQueue {
 
   scheduler: Schedulers
 
-  config: OrganizerQueueConfig
+  config: OrganizerConfig
 
-  constructor(config: OrganizerQueueConfig) {
+  queueData: {
+    [walletName: string]:
+    {
+      txCount: number,
+      spentFee: Fp
+    }
+  }
+
+  constructor(config: OrganizerConfig) {
     this.config = config
 
     const subQueues = {}
     const subWorkers = {}
     const subScheduler = {}
 
-    const { connection } = config
+    const { redis: connection } = config.node
 
     for (const rate of config.rates) {
       const queueName = rate.name ?? rate.max.toString()
@@ -84,8 +82,7 @@ export class OrganizerQueue {
         connection,
       })
 
-      subWorkers[queueName] = new Worker<ZkTxData, any, string>(
-        queueName,
+      subWorkers[queueName] = new Worker(queueName,
         async (job: ZkTxJob) => {
           this.queues.wallet[job.name].add(job.name, job.data)
         },
@@ -95,12 +92,20 @@ export class OrganizerQueue {
         },
       )
 
+      subWorkers[queueName].on('completed', (job: Job) => {
+        const { txCount, spentFee } = this.queueData[job.name]
+        this.queueData[job.name].txCount = txCount + 1 // TODO : go to rate worker  
+        this.queueData[job.name].spentFee = spentFee.add(Fp.from(job.data.zkTx.fee.toString()))
+      })
+
       subScheduler[queueName] = new QueueScheduler(queueName, { connection })
     }
 
     const defaultRate = this.config.rates[0]
 
     this.currentQueue = defaultRate.name ?? defaultRate.max.toString()
+
+    this.queueData = {}
 
     this.queues = {
       main: new Queue('mainQueue', { connection }),
@@ -112,9 +117,6 @@ export class OrganizerQueue {
       main: new Worker<ZkTxData, any, string>(
         'mainQueue',
         async (job: ZkTxJob) => {
-          logger.info(
-            `mainQueue worker job received jobName: ${job.name} jogData ${job.data}`,
-          )
           this.queues.sub[this.currentQueue].add(job.name, job.data)
         },
         { connection },
@@ -128,7 +130,7 @@ export class OrganizerQueue {
     }
   }
 
-  currentRate() {
+  currentRate = () => {
     const { limiter } = this.workers.sub[this.currentQueue].opts
     return {
       queueName: this.currentQueue,
@@ -138,7 +140,7 @@ export class OrganizerQueue {
     }
   }
 
-  selectRate(queue: string | number) {
+  selectRate = (queue: string | number) => {
     const queueName = queue.toString()
     if (!Object.keys(this.queues.sub).includes(queueName)) {
       return new Error(`There are not exist the queueName ${queueName}`)
@@ -148,14 +150,18 @@ export class OrganizerQueue {
     return { previous: previousQueue, current: this.currentQueue }
   }
 
-  addWalletQueue(walletName: string) {
+  addWalletQueue = (walletName: string) => {
     this.queues.wallet[walletName] = new Queue(walletName, {
-      connection: this.config.connection,
+      connection: this.config.node.redis,
     })
+    this.queueData[walletName] = {
+      txCount: 0,
+      spentFee: Fp.from(0)
+    }
     return Object.keys(this.queues.wallet)
   }
 
-  async jobsInQueue(queueName: string) {
+  jobsInQueue = async (queueName: string) => {
     const jobCount = await this.queues.sub[queueName].getJobCounts(
       'wait',
       'active',
@@ -164,7 +170,7 @@ export class OrganizerQueue {
     return jobCount.wait + jobCount.active + jobCount.delayed
   }
 
-  async allRemainingJobs() {
+  allRemainingJobs = async () => {
     let remainJobs = 0
     for (const queueName of Object.keys(this.queues.sub)) {
       remainJobs += await this.jobsInQueue(queueName)
