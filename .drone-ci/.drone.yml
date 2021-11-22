@@ -72,11 +72,11 @@ steps:
   commands:
   - cd /drone/src/stress-test-results
   - git checkout develop
-  - git checkout -b test/${DRONE_BUILD_NUMBER}
+  - git checkout -b result/${DRONE_BUILD_NUMBER}
   - mv /drone/src/result.json /drone/src/stress-test-results/src/content/result_${DRONE_BUILD_NUMBER}.json
   - git add .
   - git commit -m "test result ${DRONE_BUILD_NUMBER}"
-  - git push origin test/${DRONE_BUILD_NUMBER}
+  - git push origin result/${DRONE_BUILD_NUMBER}
 
 volumes:
 - name: docker.sock
