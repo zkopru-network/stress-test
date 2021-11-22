@@ -16,7 +16,7 @@ steps:
 - name: fetch
   image: alpine/git
   commands:
-  - git clone https://github.com/${DRONE_REPO_OWNER}/stress-test-results.git
+  - git clone -b main https://github.com/${DRONE_REPO_OWNER}/stress-test-results.git
   - git clone -b ${DRONE_BRANCH}  https://github.com/${DRONE_REPO}.git
   - cd stress-test
   - git clone https://github.com/${DRONE_REPO_OWNER}/zkopru.git
@@ -71,7 +71,7 @@ steps:
   image: zkopru/git
   commands:
   - cd /drone/src/stress-test-results
-  - git checkout develop
+  - git checkout main
   - git checkout -b result/${DRONE_BUILD_NUMBER}
   - mv /drone/src/result.json /drone/src/stress-test-results/src/content/result_${DRONE_BUILD_NUMBER}.json
   - git add .
