@@ -22,6 +22,7 @@ You must set those variable for using the `docker-compose.yml` in `.drone-ci`.
 - DRONE_SERVER_PROTO
 - DRONE_RPC_HOST
 - DRONE_RPC_PROTO
+- POSTGRES_PASSWORD
 
 Please see links for set these variables above.
 
