@@ -84,7 +84,5 @@ volumes:
     path: /var/run/docker.sock
 
 trigger:
-  repo:
-    - ${DRONE_REPO_OWNER}/zkopru
   branch:
     - main
