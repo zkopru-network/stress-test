@@ -65,6 +65,7 @@ steps:
     path: /var/run/docker.sock
   commands:
   - sleep 30
+  - docker rm -f watchTower || true
   - docker run --name watchTower -v /var/run/docker.sock:/var/run/docker.sock --network stress-test zkopru_node node /generator/scripts/test-watcher.js
   - docker cp watchTower:/generator/result.json ./
   - docker rm watchTower
