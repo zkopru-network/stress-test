@@ -1,5 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import fs from 'fs'
 import si from 'systeminformation'
 import { logger, sleep } from '@zkopru/utils'
 import { OrganizerConfig, OrganizerContext } from './context'
@@ -33,28 +32,16 @@ export class Organizer {
     const memInfo = await si.mem()
 
     // git branch and commit heash
-    const targetMeta = ['stress-test', 'zkopru']
-    let gitData = {}
-
-    targetMeta.forEach(repo => {
-      let branch: string
-      let commit: string
-      // headFile path is fixed dockerfile
-      const headFile = `metadata/${repo}/HEAD`
-
-      if (fs.existsSync(headFile)) {
-        const head = fs.readFileSync(headFile)
-        const headPath = head.toString().split(" ")[1].trim()
-        const headHash = fs.readFileSync(`metadata/${repo}/${headPath}`)
-
-        branch = headPath.split("/").slice(2,).join("/"),
-          commit = headHash.toString().trim()
-      } else {
-        branch = "Not Found",
-          commit = "0000000000000000000000000000000000000000"
+    const gitData = {
+      "stress-test": {
+        branch: process.env.TEST_BRANCH ?? "Not found",
+        commit: process.env.TEST_COMMIT_HASH ?? "0000000000000000000000000000000000000000"
+      },
+      zkopru: {
+        branch: process.env.ZKOPRU_BRANCH ?? "Not found",
+        commit: process.env.ZKOPRU_COMMIT_HASH ?? "0000000000000000000000000000000000000000"
       }
-      gitData[repo] = { branch, commit }
-    })
+    }
 
     const { targetTPS } = this.context.organizerQueue.currentRate()
 
