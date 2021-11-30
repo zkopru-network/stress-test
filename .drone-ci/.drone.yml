@@ -47,6 +47,10 @@ steps:
   - name: docker.sock
     path: /var/run/docker.sock
   environment:
+    ZKOPRU_BRANCH: ${TRIGGER_BRANCH}
+    ZKOPRU_COMMIT_HASH: ${TRIGGER_HASH}
+    TEST_BRANCH: ${DRONE_BRANCH}
+    TEST_COMMIT_HASH: ${DRONE_COMMIT}
     walletNum:
       from_secret: wallet-number
   detach: true
@@ -77,6 +81,16 @@ steps:
   - git add .
   - git commit -m "test result ${DRONE_BUILD_NUMBER}"
   - git push origin result/${DRONE_BUILD_NUMBER}
+
+- name: update-submodule
+  pull: never
+  image: zkopru/git
+  commands:
+  - cd /drone/src/stress-test
+  - git checkout main
+  - git add .
+  - git commit -m "zkopru ${TRIGGER_BRANCH}@${TRIGGER_HASH}" || true
+  - git push origin main || true
 
 volumes:
 - name: docker.sock

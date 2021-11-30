@@ -43,6 +43,11 @@ services:
       - 'coordinator'
     labels:
       kompose.service.expose: organizer
+    environment:
+      - ZKOPRU_BRANCH=${ZKOPRU_BRANCH}
+      - ZKOPRU_COMMIT_HASH=${ZKOPRU_COMMIT_HASH}
+      - TEST_BRANCH=${TEST_BRANCH}
+      - TEST_COMMIT_HASH=${TEST_COMMIT_HASH}
     command: bash -c "node /generator/dist/organizer/index.js"
   wallet:
     image: zkopru_node
