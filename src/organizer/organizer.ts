@@ -1,5 +1,4 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import fs from 'fs'
 import si from 'systeminformation'
 import { logger, sleep } from '@zkopru/utils'
 import { OrganizerConfig, OrganizerContext } from './context'
