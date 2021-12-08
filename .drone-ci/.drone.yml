@@ -23,7 +23,7 @@ steps:
   image: alpine/git
   commands:
   - git clone -b main https://github.com/${DRONE_REPO_OWNER}/stress-test-results.git
-  - git clone -b ${DRONE_BRANCH}  https://github.com/${DRONE_REPO}.git
+  - git clone -b ${DRONE_BRANCH} https://github.com/${DRONE_REPO}.git
   - cd stress-test
   - git clone https://github.com/${DRONE_REPO_OWNER}/zkopru.git
 
@@ -94,6 +94,9 @@ steps:
   - git add .
   - git commit -m "zkopru ${TRIGGER_BRANCH}@${TRIGGER_HASH}" || true
   - git push origin main || true
+  when:
+    repo:
+      - ${DRONE_REPO_OWNER}/zkopru
 
 volumes:
 - name: docker.sock
