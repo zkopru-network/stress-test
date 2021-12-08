@@ -11,7 +11,8 @@
     "petersburgBlock": 0,
     "istanbulBlock": 0,
     "muirGlacierBlock": 0,
-    "berlinBlock": 0
+    "berlinBlock": 0,
+    "londonBlock": 0
   },
   "nonce": "0x0000000000000000",
   "difficulty": "0x00",
