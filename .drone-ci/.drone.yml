@@ -12,6 +12,12 @@ platform:
   os: linux
   arch: amd64
 
+environment:
+  ZKOPRU_BRANCH: ${TRIGGER_BRANCH}
+  ZKOPRU_COMMIT_HASH: ${TRIGGER_HASH}
+  TEST_BRANCH: ${DRONE_BRANCH}
+  TEST_COMMIT_HASH: ${DRONE_COMMIT}
+
 steps:
 - name: fetch
   image: alpine/git
@@ -47,10 +53,6 @@ steps:
   - name: docker.sock
     path: /var/run/docker.sock
   environment:
-    ZKOPRU_BRANCH: ${TRIGGER_BRANCH}
-    ZKOPRU_COMMIT_HASH: ${TRIGGER_HASH}
-    TEST_BRANCH: ${DRONE_BRANCH}
-    TEST_COMMIT_HASH: ${DRONE_COMMIT}
     walletNum:
       from_secret: wallet-number
   detach: true
