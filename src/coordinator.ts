@@ -49,7 +49,8 @@ async function testCoodinator() {
   const coordinatorConfig = {
     bootstrap: true,
     address: config.zkopruContract,
-    maxBytes: 131072,
+    // TODO: fix precise tsSize
+    maxBytes: 131072 - 340 - 750, // 340 for header, 750 for diff 
     maxBid: 20000,
     vhosts: '*',
     priceMultiplier: 48,
