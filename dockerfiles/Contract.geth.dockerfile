@@ -1,4 +1,4 @@
-FROM ethereum/client-go:v1.10.3 AS base
+FROM ethereum/client-go:v1.10.13 AS base
 
 # Deploy contract on geth private network
 FROM node:16-alpine
